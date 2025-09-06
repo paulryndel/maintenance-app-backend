@@ -72,7 +72,7 @@
                              <p id="loggedInUserDisplay" class="font-semibold text-brand-slate"></p>
                              <p class="text-xs text-gray-500">Technician</p>
                         </div>
-                        <img id="technicianPhoto" src="" alt="Technician" class="w-12 h-12 rounded-full object-cover bg-gray-200 apple-shadow">
+                        <img id="technicianPhoto" src="https://placehold.co/100x100/E5C9D7/0D1E4C?text=Photo" alt="Technician" class="w-12 h-12 rounded-full object-cover bg-gray-200 apple-shadow">
                         <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Logo" class="h-10 w-auto">
                     </div>
                 </header>
@@ -93,22 +93,24 @@
                 </div>
                 
                 <!-- Checklist Table -->
-                <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <div class="overflow-auto rounded-lg border border-gray-200" style="max-height: 60vh;">
                     <table class="w-full text-sm text-left" id="checklistTable">
-                        <thead class="bg-gray-100 text-xs text-brand-slate uppercase table-header-sticky">
-                            <tr>
+                        <thead class="text-xs text-brand-slate uppercase table-header-sticky">
+                            <tr class="header-row-1">
+                                <th class="px-4 py-4 font-semibold tracking-wider w-16">Item #</th>
                                 <th class="px-6 py-4 font-semibold tracking-wider">Inspection List</th>
                                 <th class="px-6 py-4 text-center font-semibold tracking-wider" colspan="5">Required Action</th>
                                 <th class="px-6 py-4 font-semibold tracking-wider">Result</th>
                             </tr>
-                            <tr class="border-b border-gray-200">
-                                <td></td>
-                                <td class="w-12 text-center py-2 font-bold" title="Normal">N</td>
-                                <td class="w-12 text-center py-2 font-bold" title="Adjust">A</td>
-                                <td class="w-12 text-center py-2 font-bold" title="Clean">C</td>
-                                <td class="w-12 text-center py-2 font-bold" title="Replace">R</td>
-                                <td class="w-12 text-center py-2 font-bold" title="Improve">I</td>
-                                <td></td>
+                            <tr class="header-row-2">
+                                <th></th>
+                                <th></th>
+                                <th class="w-12 text-center py-2 font-bold" title="Normal">N</th>
+                                <th class="w-12 text-center py-2 font-bold" title="Adjust">A</th>
+                                <th class="w-12 text-center py-2 font-bold" title="Clean">C</th>
+                                <th class="w-12 text-center py-2 font-bold" title="Replace">R</th>
+                                <th class="w-12 text-center py-2 font-bold" title="Improve">I</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="checklist-body" class="text-gray-700"></tbody>
@@ -140,14 +142,12 @@
             let loggedInTechnician = null;
             let clockInterval = null;
 
-            // --- DOM Elements ---
             const loginView = document.getElementById('login-view');
             const checklistView = document.getElementById('checklist-view');
             const loginForm = document.getElementById('login-form');
             const logoutButton = document.getElementById('logoutButton');
             const errorMessage = document.getElementById('error-message');
             
-            // --- Clock Function ---
             function updateClock() {
                 const now = new Date();
                 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -156,7 +156,6 @@
                 document.getElementById('dateTimeClock').textContent = `${dateString}, ${timeString}`;
             }
 
-            // --- Login/Logout Logic ---
             loginForm.addEventListener('submit', async function(event) {
                 event.preventDefault();
                 const loginButton = loginForm.querySelector('button[type="submit"]');
@@ -173,7 +172,9 @@
                     if (response.ok && result.status === 'success') {
                         loggedInTechnician = result.username;
                         document.getElementById('loggedInUserDisplay').textContent = loggedInTechnician;
-                        document.getElementById('technicianPhoto').src = result.photoURL || 'https://placehold.co/100x100/E5C9D7/0D1E4C?text=Photo';
+                        if (result.photoURL) {
+                            document.getElementById('technicianPhoto').src = result.photoURL;
+                        }
                         loginView.classList.add('hidden');
                         checklistView.classList.remove('hidden');
                         errorMessage.textContent = '';
@@ -199,10 +200,10 @@
                 document.getElementById('country').value = '';
                 document.getElementById('machineType').value = '';
                 document.getElementById('serialNo').value = '';
+                document.getElementById('technicianPhoto').src = 'https://placehold.co/100x100/E5C9D7/0D1E4C?text=Photo';
                 renderChecklist();
             });
 
-            // --- Checklist Data and Rendering ---
             const checklistData = [
                 { category: 'Pump & Mechanical', items: [
                     { text: 'Check the gear pump motor.', id: 'Motor_Check' }, { text: 'Check the oil level of the motor gear.', id: 'Motor_Gear_Oil' }, { text: 'Check the motor gear.', id: 'Motor_Gear_Condition' }, { text: 'Check the packing seal at the gear pump.', id: 'Pump_Seal' }, { text: 'Check for material leakage.', id: 'Material_Leakage' }, { text: 'Check the joint between the pump and drive shaft.', id: 'Shaft_Joint' }, { text: 'Check the gear pump rotation.', id: 'Pump_Rotation' }, { text: 'Check the motor gear mounting.', id: 'Motor_Mounting' }, { text: 'Check the filter screen retainer.', id: 'Filter_Retainer' }, { text: 'Check gear pump cleaning/cleanliness.', id: 'Pump_Cleanliness' }, { text: 'Check the safety pin on the shaft joint.', id: 'Shaft_Safety_Pin' }
@@ -221,13 +222,14 @@
             const checklistBody = document.getElementById('checklist-body');
             function renderChecklist() {
                 checklistBody.innerHTML = '';
-                let rowIndex = 0;
+                let itemNumber = 1;
                 checklistData.forEach(section => {
-                    checklistBody.innerHTML += `<tr class="bg-gray-50"><td colspan="8" class="px-6 py-3 font-bold text-brand-navy">${section.category}</td></tr>`;
+                    checklistBody.innerHTML += `<tr class="bg-gray-100"><td colspan="9" class="px-6 py-3 font-bold text-brand-navy">${section.category}</td></tr>`;
                     section.items.forEach(item => {
-                        const actionName = `action-row-${rowIndex}`;
+                        const actionName = `action-row-${itemNumber}`;
                         checklistBody.innerHTML += `
                             <tr class="border-b border-gray-200 hover:bg-gray-100 transition duration-150" data-item-id="${item.id}">
+                                <td class="px-4 py-4 text-center text-gray-500">${itemNumber}</td>
                                 <td class="px-6 py-4">${item.text}</td>
                                 ${['N', 'A', 'C', 'R', 'I'].map(action => `
                                     <td class="text-center py-4">
@@ -239,12 +241,11 @@
                                 </td>
                             </tr>
                         `;
-                        rowIndex++;
+                        itemNumber++;
                     });
                 });
             }
 
-            // --- Data Submission Logic ---
             const submissionModal = document.getElementById('submissionModal');
             const modalContent = document.getElementById('modal-content');
             const submitButton = document.getElementById('submitButton');
@@ -311,7 +312,6 @@
             
             document.getElementById('closeModal').addEventListener('click', () => submissionModal.classList.add('hidden'));
 
-            // --- Initialisation ---
             renderChecklist();
             document.getElementById('inspectedDate').valueAsDate = new Date();
         });
