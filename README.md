@@ -35,10 +35,17 @@ This guide will walk you through deploying your application on Vercel using a se
 
 ### **Step 2 & 3: Local Setup & Push to GitHub**
 
-(These steps remain the same. Set up your project locally and push it to your GitHub repository.)
+1.  **Local Setup:** Organize all your files (`index.html`, `package.json`, etc.) and the `api` folder in your main project directory.
+2.  **Install Dependencies:** Run `npm install` in your terminal inside the project directory.
+3.  **Push to GitHub:** Use `git add .`, `git commit -m "Your message"`, and `git push origin main` to upload your project.
 
 ---
 
 ### **Step 4: Deploy on Vercel**
 
-(This step remains the same. Import your project on Vercel and add your three Environment Variables: `SPREADSHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, and `GOOGLE_PRIVATE_KEY`.)
+1.  **Import Project:** On Vercel, import your project from your GitHub repository.
+2.  **Add Environment Variables:** In the project settings, add your three secret keys:
+    * `SPREADSHEET_ID`
+    * `GOOGLE_SERVICE_ACCOUNT_EMAIL`
+    * `GOOGLE_PRIVATE_KEY`
+3.  **Deploy:** Click the "Deploy" button. Vercel will build and host your application.

@@ -10,6 +10,9 @@ module.exports = async (request, response) => {
 
     try {
         const data = request.body;
+        if (!data.CustomerID) {
+            return response.status(400).json({ status: 'fail', message: 'CustomerID is missing from the checklist data.' });
+        }
 
         // --- AUTHENTICATION WITH GOOGLE SHEETS ---
         const auth = new google.auth.GoogleAuth({
@@ -17,7 +20,6 @@ module.exports = async (request, response) => {
                 client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
                 private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
             },
-            // IMPORTANT: The scope must be changed to allow writing to the sheet
             scopes: ['https://www.googleapis.com/auth/spreadsheets'],
         });
 

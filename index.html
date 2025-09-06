@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preventive Maintenance Checklist</title>
     
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Custom Tailwind Theme Configuration -->
     <script>
         tailwind.config = {
             theme: {
@@ -26,51 +24,32 @@
         }
     </script>
     
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Custom CSS for additional styling and print -->
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #242E49; }
+        ::-webkit-scrollbar-thumb { background: #37415C; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4a5570; }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #FDA481;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
         }
-
-        /* Custom scrollbar for better aesthetics in dark mode */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #242E49;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #37415C;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4a5570;
-        }
-
-        /* Styles for printing the form */
-        @media print {
-            body { background-color: white !important; color: black !important; }
-            .bg-primary-darkest, .bg-primary-dark, .bg-primary-medium { background-color: white !important; }
-            .text-white, .text-gray-300, .text-gray-400, .text-accent-peach { color: black !important; }
-            input, textarea { border: 1px solid #ccc !important; color: black !important; background-color: white !important; }
-            .border-gray-700, .border-gray-600 { border-color: #ccc !important; }
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; }
-            .no-print { display: none; }
-            input[type="radio"]:checked + label::after { content: '✔'; position: absolute; left: 4px; top: -2px; color: black; }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body class="bg-primary-darkest text-gray-300">
 
-    <!-- Login View -->
     <div id="login-view" class="flex items-center justify-center min-h-screen">
         <div class="w-full max-w-md p-8 space-y-8 bg-primary-dark rounded-2xl shadow-2xl shadow-primary-darkest/50">
             <div class="text-center">
@@ -90,28 +69,30 @@
         </div>
     </div>
 
-    <!-- Checklist View (Initially Hidden) -->
     <div id="checklist-view" class="hidden">
-        <div id="print-area" class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="container mx-auto p-4 sm:p-6 lg:p-8">
             <div class="bg-primary-dark rounded-2xl shadow-2xl shadow-primary-darkest/50 p-6 sm:p-8">
                 <header class="mb-8 flex justify-between items-center">
                     <div>
                          <h1 class="text-2xl sm:text-3xl font-bold text-white">Preventive Maintenance Checklist</h1>
                          <p class="text-gray-400 mt-1">Logged in as: <span id="loggedInUserDisplay" class="font-bold text-accent-peach"></span></p>
                     </div>
-                    <button id="logoutButton" class="no-print px-4 py-2 bg-accent-red text-white font-medium text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-accent-red/50 transition duration-300">
+                    <button id="logoutButton" class="px-4 py-2 bg-accent-red text-white font-medium text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-accent-red/50 transition duration-300">
                         Log Out
                     </button>
                 </header>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 border-b border-gray-700 pb-8">
-                    <div>
-                        <label for="customerID" class="block text-sm font-medium text-gray-400 mb-1">Customer ID</label>
-                        <input type="text" id="customerID" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
-                    </div>
-                    <div>
-                        <label for="inspectedDate" class="block text-sm font-medium text-gray-400 mb-1">Inspected Date</label>
-                        <input type="date" id="inspectedDate" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                <div class="mb-8 border-b border-gray-700 pb-8">
+                    <h2 class="text-xl font-bold text-white mb-4">Customer & Machine Details</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <input type="text" id="customerName" placeholder="Customer Name" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                        <input type="text" id="country" placeholder="Country" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                        <input type="text" id="machineType" placeholder="Machine Type" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                        <input type="text" id="serialNo" placeholder="Serial No." class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                        <div>
+                             <label for="inspectedDate" class="block text-sm font-medium text-gray-400 mb-1">Inspected Date</label>
+                             <input type="date" id="inspectedDate" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                        </div>
                     </div>
                 </div>
                 
@@ -137,9 +118,11 @@
                     </table>
                 </div>
 
-                <div class="mt-8 flex flex-col sm:flex-row justify-end items-center gap-4 no-print">
-                    <button id="printButton" class="w-full sm:w-auto px-6 py-2.5 bg-primary-medium text-white font-medium text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-primary-medium/50 transition duration-300">Print Checklist</button>
-                    <button id="submitButton" class="w-full sm:w-auto px-6 py-2.5 bg-accent-peach text-primary-darkest font-bold text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-accent-peach/50 transition duration-300">Submit Checklist</button>
+                <div class="mt-8 flex justify-end items-center gap-4">
+                    <button id="submitButton" class="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-2.5 bg-accent-peach text-primary-darkest font-bold text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-accent-peach/50 transition duration-300 disabled:opacity-50 disabled:cursor-wait">
+                        <span id="submitButtonText">Create Customer & Submit</span>
+                        <div id="submitSpinner" class="spinner hidden"></div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -156,12 +139,14 @@
         document.addEventListener('DOMContentLoaded', function() {
             let loggedInTechnician = null;
 
+            // --- DOM Elements ---
             const loginView = document.getElementById('login-view');
             const checklistView = document.getElementById('checklist-view');
             const loginForm = document.getElementById('login-form');
             const logoutButton = document.getElementById('logoutButton');
             const errorMessage = document.getElementById('error-message');
             
+            // --- Login/Logout Logic ---
             loginForm.addEventListener('submit', async function(event) {
                 event.preventDefault();
                 const loginButton = loginForm.querySelector('button[type="submit"]');
@@ -187,8 +172,6 @@
                     }
                 } catch (error) {
                     errorMessage.textContent = error.message;
-                    loginForm.parentElement.classList.add('animate-shake');
-                    setTimeout(() => loginForm.parentElement.classList.remove('animate-shake'), 500);
                 } finally {
                     loginButton.disabled = false;
                 }
@@ -198,8 +181,15 @@
                 loggedInTechnician = null;
                 checklistView.classList.add('hidden');
                 loginView.classList.remove('hidden');
+                // Reset form fields on logout
+                document.getElementById('customerName').value = '';
+                document.getElementById('country').value = '';
+                document.getElementById('machineType').value = '';
+                document.getElementById('serialNo').value = '';
+                renderChecklist();
             });
 
+            // --- Checklist Data and Rendering ---
             const checklistData = [
                 { category: 'Pump & Mechanical', items: [
                     { text: 'Check the gear pump motor.', id: 'Motor_Check' },
@@ -264,54 +254,77 @@
                 });
             }
 
-            function collectData() {
-                const data = {
-                    CustomerID: document.getElementById('customerID').value,
-                    Technician: loggedInTechnician,
-                    TechnicianID: loggedInTechnician, // Assuming Technician name and ID are the same for now
-                    InspectedDate: document.getElementById('inspectedDate').value,
-                };
-                const rows = document.querySelectorAll('#checklistTable tbody tr[data-item-id]');
-                rows.forEach(row => {
-                    const itemId = row.dataset.itemId;
-                    const selectedAction = row.querySelector(`input[type="radio"]:checked`);
-                    const resultText = row.querySelector('.result-input').value;
-                    // For the sheet, we combine action and result
-                    data[itemId] = selectedAction ? `${selectedAction.value} - ${resultText}` : resultText;
-                });
-                return data;
-            }
-
+            // --- Data Submission Logic ---
             const submissionModal = document.getElementById('submissionModal');
             const modalContent = document.getElementById('modal-content');
+            const submitButton = document.getElementById('submitButton');
+            const submitButtonText = document.getElementById('submitButtonText');
+            const submitSpinner = document.getElementById('submitSpinner');
             
-            document.getElementById('submitButton').addEventListener('click', async () => {
-                const data = collectData();
-                modalContent.innerHTML = `<h3 class="text-xl font-bold text-white mb-4">Submitting...</h3><p class="text-gray-400">Please wait while we record the checklist.</p>`;
-                submissionModal.classList.remove('hidden');
-
+            submitButton.addEventListener('click', async () => {
+                submitButton.disabled = true;
+                submitButtonText.textContent = 'Submitting...';
+                submitSpinner.classList.remove('hidden');
+                
                 try {
-                    const response = await fetch('/api/submitChecklist', {
+                    // Step 1: Create Customer
+                    const customerData = {
+                        CustomerName: document.getElementById('customerName').value,
+                        Country: document.getElementById('country').value,
+                        MachineType: document.getElementById('machineType').value,
+                        SerialNo: document.getElementById('serialNo').value,
+                    };
+
+                    const customerResponse = await fetch('/api/createCustomer', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data),
+                        body: JSON.stringify(customerData),
                     });
-                    const result = await response.json();
-                    if (!response.ok) throw new Error(result.message || 'Submission failed.');
-                    modalContent.innerHTML = `<h3 class="text-xl font-bold text-green-400 mb-4">Success!</h3><p class="text-gray-300">The checklist has been recorded successfully.</p>`;
+                    const customerResult = await customerResponse.json();
+                    if (!customerResponse.ok) throw new Error(customerResult.message || 'Failed to create customer.');
+
+                    const newCustomerID = customerResult.customerID;
+
+                    // Step 2: Collect Checklist Data
+                    const checklistResultData = {
+                        CustomerID: newCustomerID,
+                        Technician: loggedInTechnician,
+                        TechnicianID: loggedInTechnician,
+                        InspectedDate: document.getElementById('inspectedDate').value,
+                    };
+                    document.querySelectorAll('#checklistTable tbody tr[data-item-id]').forEach(row => {
+                        const itemId = row.dataset.itemId;
+                        const selectedAction = row.querySelector(`input[type="radio"]:checked`);
+                        const resultText = row.querySelector('.result-input').value;
+                        checklistResultData[itemId] = selectedAction ? `${selectedAction.value} - ${resultText}` : resultText;
+                    });
+                    
+                    // Step 3: Submit Checklist
+                    const checklistResponse = await fetch('/api/submitChecklist', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(checklistResultData),
+                    });
+                     const checklistSubmitResult = await checklistResponse.json();
+                    if (!checklistResponse.ok) throw new Error(checklistSubmitResult.message || 'Submission failed.');
+                    
+                    modalContent.innerHTML = `<h3 class="text-xl font-bold text-green-400 mb-4">Success!</h3><p class="text-gray-300">Customer and checklist have been recorded successfully. New Customer ID: ${newCustomerID}</p>`;
+                
                 } catch (error) {
                     modalContent.innerHTML = `<h3 class="text-xl font-bold text-red-500 mb-4">Error</h3><p class="text-gray-300">${error.message}</p>`;
+                } finally {
+                    submissionModal.classList.remove('hidden');
+                    submitButton.disabled = false;
+                    submitButtonText.textContent = 'Create Customer & Submit';
+                    submitSpinner.classList.add('hidden');
                 }
             });
             
-            document.getElementById('printButton').addEventListener('click', () => window.print());
             document.getElementById('closeModal').addEventListener('click', () => submissionModal.classList.add('hidden'));
 
+            // --- Initialisation ---
             renderChecklist();
             document.getElementById('inspectedDate').valueAsDate = new Date();
-            const style = document.createElement('style');
-            style.innerHTML = `@keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } } .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }`;
-            document.head.appendChild(style);
         });
     </script>
 </body>
