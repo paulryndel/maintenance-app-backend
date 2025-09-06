@@ -5,8 +5,7 @@ const { google } = require('googleapis');
 module.exports = async (request, response) => {
     // We only want to handle POST requests for security
     if (request.method !== 'POST') {
-        response.status(405).send('Method Not Allowed');
-        return;
+        return response.status(405).send('Method Not Allowed');
     }
 
     try {
@@ -14,13 +13,12 @@ module.exports = async (request, response) => {
         const { username, password } = request.body;
         
         // --- AUTHENTICATION WITH GOOGLE SHEETS ---
-        // These credentials come from your Vercel Environment Variables
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-                private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Fix for Vercel env var
+                private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
             },
-            scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'], // Read-only access
+            scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
         });
         
         const sheets = google.sheets({ version: 'v4', auth });
@@ -28,32 +26,30 @@ module.exports = async (request, response) => {
         // Fetch data from the "TechnicianDetails" sheet
         const sheetData = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.SPREADSHEET_ID,
-            // Updated Range: Fetch columns up to E to get User and Password
             range: 'TechnicianDetails!A:E', 
         });
 
         const rows = sheetData.data.values;
         let loginSuccess = false;
+        let loggedInUsername = null;
 
-        // Check if we got any rows from the sheet
         if (rows && rows.length > 0) {
-            // Loop through each row (skipping the header) to find a match
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-                // Updated Column Indices: D is index 3, E is index 4
                 const sheetUsername = row[3]; // Column D for User
                 const sheetPassword = row[4]; // Column E for Password
                 
                 if (sheetUsername === username && sheetPassword === password) {
                     loginSuccess = true;
+                    loggedInUsername = sheetUsername; // Store the username
                     break;
                 }
             }
         }
         
-        // --- SEND RESPONSE ---
         if (loginSuccess) {
-            response.status(200).json({ status: 'success' });
+            // Send username back to the frontend on successful login
+            response.status(200).json({ status: 'success', username: loggedInUsername });
         } else {
             response.status(401).json({ status: 'fail', message: 'Invalid credentials.' });
         }
@@ -63,4 +59,3 @@ module.exports = async (request, response) => {
         response.status(500).json({ status: 'error', message: 'Internal Server Error.' });
     }
 };
-
