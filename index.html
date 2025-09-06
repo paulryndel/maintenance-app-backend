@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preventive Maintenance Checklist</title>
+
+<!-- Tailwind CSS for styling -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Custom Tailwind Theme Configuration -->
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'primary-darkest': '#181A2F',
+                    'primary-dark': '#242E49',
+                    'primary-medium': '#37415C',
+                    'accent-peach': '#FDA481',
+                    'accent-red': '#B4182D',
+                    'accent-maroon': '#54162B',
+                }
+            }
+        }
+    }
+</script>
+
+<!-- Google Fonts: Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Custom CSS for additional styling and print -->
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Custom scrollbar for better aesthetics in dark mode */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #242E49;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #37415C;
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #4a5570;
+    }
+
+    /* Styles for printing the form */
+    @media print {
+        /* Reset colors for printing */
+        body {
+            background-color: white !important;
+            color: black !important;
+        }
+        .bg-primary-darkest, .bg-primary-dark, .bg-primary-medium {
+            background-color: white !important;
+        }
+        .text-white, .text-gray-300, .text-gray-400, .text-accent-peach {
+            color: black !important;
+        }
+        input, textarea {
+            border: 1px solid #ccc !important;
+            color: black !important;
+            background-color: white !important;
+        }
+        .border-gray-700, .border-gray-600 {
+            border-color: #ccc !important;
+        }
+
+        body * {
+            visibility: hidden;
+        }
+        #print-area, #print-area * {
+            visibility: visible;
+        }
+        #print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .no-print {
+            display: none;
+        }
+        
+        input[type="radio"]:checked + label::after {
+            content: '✔';
+            position: absolute;
+            left: 4px;
+            top: -2px;
+            color: black;
+        }
+    }
+</style>
+
+</head>
+<body class="bg-primary-darkest text-gray-300">
+
+<!-- Login View -->
+<div id="login-view" class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md p-8 space-y-8 bg-primary-dark rounded-2xl shadow-2xl shadow-primary-darkest/50">
+        <div class="text-center">
+            <h2 class="text-3xl font-bold text-white">Welcome Back</h2>
+            <p class="mt-2 text-gray-400">Sign in to access the Maintenance Checklist</p>
+        </div>
+        <form id="login-form" class="mt-8 space-y-6">
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label for="username" class="sr-only">User</label>
+                    <input id="username" name="username" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-600 bg-primary-medium text-white placeholder-gray-400 rounded-t-md focus:outline-none focus:ring-accent-peach focus:border-accent-peach sm:text-sm transition" placeholder="User">
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Password</label>
+                    <input id="password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-600 bg-primary-medium text-white placeholder-gray-400 rounded-b-md focus:outline-none focus:ring-accent-peach focus:border-accent-peach sm:text-sm transition" placeholder="Password">
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-primary-darkest bg-accent-peach hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-dark focus:ring-accent-peach transition">
+                    Log In
+                </button>
+            </div>
+             <p id="error-message" class="text-sm text-center text-accent-red h-4"></p>
+        </form>
+    </div>
+</div>
+
+
+<!-- Checklist View (Initially Hidden) -->
+<div id="checklist-view" class="hidden">
+    <div id="print-area" class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="bg-primary-dark rounded-2xl shadow-2xl shadow-primary-darkest/50 p-6 sm:p-8">
+            <!-- Header Section -->
+             <header class="mb-8 flex justify-between items-center">
+                <div class="text-left">
+                     <h1 class="text-2xl sm:text-3xl font-bold text-white">Preventive Maintenance Checklist</h1>
+                     <p class="text-gray-400 mt-1">Filter Tester Machine</p>
+                </div>
+                <button id="logoutButton" class="no-print px-4 py-2 bg-accent-red text-white font-medium text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-accent-red/50 transition duration-300">
+                    Log Out
+                </button>
+            </header>
+
+            <!-- Inspector and Machine Details Form -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 border-b border-gray-700 pb-8">
+                <div>
+                    <label for="customerName" class="block text-sm font-medium text-gray-400 mb-1">Customer Name</label>
+                    <input type="text" id="customerName" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                </div>
+                <div>
+                    <label for="machineType" class="block text-sm font-medium text-gray-400 mb-1">Machine Type</label>
+                    <input type="text" id="machineType" value="Filter Tester" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                </div>
+                <div>
+                    <label for="serialNo" class="block text-sm font-medium text-gray-400 mb-1">Serial No.</label>
+                    <input type="text" id="serialNo" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                </div>
+                <div>
+                    <label for="inspector" class="block text-sm font-medium text-gray-400 mb-1">Inspector</label>
+                    <input type="text" id="inspector" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                </div>
+                <div>
+                    <label for="inspectedDate" class="block text-sm font-medium text-gray-400 mb-1">Inspected Date</label>
+                    <input type="date" id="inspectedDate" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                </div>
+            </div>
+            
+            <!-- Checklist Table -->
+            <div class="overflow-x-auto rounded-lg border border-gray-700">
+                <table class="w-full text-sm text-left" id="checklistTable">
+                    <thead class="bg-primary-medium text-xs text-accent-peach uppercase">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Inspection List</th>
+                            <th scope="col" class="px-6 py-4 text-center font-semibold tracking-wider" colspan="5">Required Action</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Result</th>
+                        </tr>
+                        <tr class="bg-primary-dark/50 border-b border-gray-700">
+                            <td class="px-6 py-2"></td>
+                            <td class="w-12 text-center py-2 font-bold" title="Normal">N</td>
+                            <td class="w-12 text-center py-2 font-bold" title="Adjust">A</td>
+                            <td class="w-12 text-center py-2 font-bold" title="Clean">C</td>
+                            <td class="w-12 text-center py-2 font-bold" title="Replace">R</td>
+                            <td class="w-12 text-center py-2 font-bold" title="Improve">I</td>
+                            <td class="px-6 py-2"></td>
+                        </tr>
+                    </thead>
+                    <tbody id="checklist-body" class="text-gray-300">
+                        <!-- Items will be injected here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+             <!-- Legend for action codes -->
+            <div class="mt-6 p-4 bg-primary-dark rounded-lg border border-gray-700">
+                <h3 class="font-semibold text-gray-200 mb-2">Action Key</h3>
+                <p class="text-xs text-gray-400">
+                    <span class="mr-3"><strong class="font-mono text-accent-peach">N:</strong> Normal</span>
+                    <span class="mr-3"><strong class="font-mono text-accent-peach">A:</strong> Adjust</span>
+                    <span class="mr-3"><strong class="font-mono text-accent-peach">C:</strong> Clean</span>
+                    <span class="mr-3"><strong class="font-mono text-accent-peach">R:</strong> Replace</span>
+                    <span><strong class="font-mono text-accent-peach">I:</strong> Improve</span>
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-8 flex flex-col sm:flex-row justify-end items-center gap-4 no-print">
+                <button id="printButton" class="w-full sm:w-auto px-6 py-2.5 bg-primary-medium text-white font-medium text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-primary-medium/50 transition duration-300">
+                    Print Checklist
+                </button>
+                <button id="submitButton" class="w-full sm:w-auto px-6 py-2.5 bg-accent-peach text-primary-darkest font-bold text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-accent-peach/50 transition duration-300">
+                    Submit Checklist
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for showing submitted data -->
+    <div id="dataModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-primary-dark rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col border border-gray-700">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-white">Submitted Data</h3>
+                <button id="closeModal" class="text-gray-400 text-2xl leading-none hover:text-white">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <p class="text-sm text-gray-400 mb-4">This is the JSON data that would be sent to your server or Google Sheet. You can now copy this data or integrate it with your backend.</p>
+                <pre class="bg-primary-darkest text-sm p-4 rounded-lg border border-gray-700 overflow-x-auto"><code id="jsonData" class="text-gray-300"></code></pre>
+            </div>
+             <div class="p-4 bg-primary-dark/50 border-t border-gray-700 flex justify-end">
+                 <button id="copyJsonButton" class="px-4 py-2 bg-accent-red text-white font-medium text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-accent-red/50 transition duration-300">
+                    Copy JSON
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // --- DOM ELEMENTS ---
+        const loginView = document.getElementById('login-view');
+        const checklistView = document.getElementById('checklist-view');
+        const loginForm = document.getElementById('login-form');
+        const logoutButton = document.getElementById('logoutButton');
+        const errorMessage = document.getElementById('error-message');
+        
+        // --- LOGIN/LOGOUT LOGIC ---
+        loginForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const loginButton = loginForm.querySelector('button[type="submit"]');
+            loginButton.disabled = true;
+            errorMessage.textContent = 'Checking...';
+
+            // The Vercel Serverless Function will be at this endpoint
+            const apiEndpoint = '/api/login';
+            
+            const username = loginForm.username.value;
+            const password = loginForm.password.value;
+
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: username, password: password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    loginView.classList.add('hidden');
+                    checklistView.classList.remove('hidden');
+                    errorMessage.textContent = '';
+                    loginForm.password.value = ''; // Clear password field
+                } else {
+                    errorMessage.textContent = result.message || 'Invalid user or password.';
+                    // Add a shake animation for bad password
+                    loginForm.parentElement.classList.add('animate-shake');
+                    setTimeout(() => {
+                        loginForm.parentElement.classList.remove('animate-shake');
+                    }, 500);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = 'Login request failed. Check console.';
+            } finally {
+                loginButton.disabled = false;
+            }
+        });
+
+        logoutButton.addEventListener('click', () => {
+            checklistView.classList.add('hidden');
+            loginView.classList.remove('hidden');
+        });
+
+        // --- DATA ---
+        const checklistData = [
+            {
+                category: 'Mechanical System',
+                subCategory: 'Gear Pump',
+                items: [
+                    'Check the gear pump motor',
+                    'Check the oil level of motor gear',
+                    'Check the motor gear',
+                    'Check the packing seal at the gear pump',
+                    'Check the leakage of the material',
+                    'Check the joint between the gear pump shaft and drive shaft',
+                    'Check the gear pump rotation',
+                    'Check the mounting of motor gear with support',
+                    'Check the retainer of filter screen',
+                    'Check the gear pump cleaning',
+                    'Check the safety pin at the connecting joint of gear pump shaft'
+                ]
+            },
+            {
+                category: 'Heating',
+                items: [
+                    'Check the condition of heater',
+                    'Check the thermocouple',
+                    'Check the temperature controller',
+                    'Check the condition of insulator for heater cables',
+                    'Check the condition of heater cable and connection'
+                ]
+            },
+            {
+                category: 'Electrical System',
+                subCategory: 'Electrical Component',
+                items: [
+                    'Check the inverter of gear pump motor',
+                    'Check the close loop control for pressure',
+                    'Check the motor overload circuit breaker',
+                    'Check the pressure transducer',
+                    'Check the lamp indicator',
+                    'Check all the switches',
+                    'Check the low temperature alarm at the temperature controller',
+                    'Check the high/low pressure alarm',
+                    'Check the buzzer',
+                    'Check the emergency stop button',
+                    'Check the condition of PC'
+                ]
+            }
+        ];
+
+        const checklistBody = document.getElementById('checklist-body');
+        let rowIndex = 0;
+
+        // --- FUNCTIONS ---
+
+        /**
+         * Generates the HTML for the checklist table rows from the data object.
+         */
+        function renderChecklist() {
+            checklistBody.innerHTML = ''; // Clear existing rows before rendering
+            rowIndex = 0; // Reset row index
+            checklistData.forEach(section => {
+                const categoryTitle = section.subCategory ? `${section.category} - ${section.subCategory}` : section.category;
+                checklistBody.innerHTML += `<tr class="bg-primary-medium/40 sticky top-0 backdrop-blur-sm"><td colspan="7" class="px-6 py-3 font-bold text-white">${categoryTitle}</td></tr>`;
+
+                section.items.forEach(item => {
+                    const actionName = `action-row-${rowIndex}`;
+                    checklistBody.innerHTML += `
+                        <tr class="border-b border-gray-700 hover:bg-primary-medium/50 transition duration-150" data-row-index="${rowIndex}">
+                            <td class="px-6 py-4">${item}</td>
+                            ${['N', 'A', 'C', 'R', 'I'].map(action => `
+                                <td class="text-center py-4">
+                                    <div class="flex justify-center items-center">
+                                        <input type="radio" id="${actionName}-${action}" name="${actionName}" value="${action}" class="w-4 h-4 text-accent-peach bg-gray-700 border-gray-600 focus:ring-accent-peach">
+                                        <label for="${actionName}-${action}" class="sr-only">${action}</label>
+                                    </div>
+                                </td>
+                            `).join('')}
+                            <td class="px-6 py-4">
+                                <input type="text" class="result-input w-full bg-primary-medium border border-gray-600 text-white rounded-md p-2 text-sm focus:ring-1 focus:ring-accent-peach focus:border-accent-peach transition" placeholder="Result...">
+                            </td>
+                        </tr>
+                    `;
+                    rowIndex++;
+                });
+            });
+        }
+
+        function collectData() {
+            const headerData = {
+                customerName: document.getElementById('customerName').value, machineType: document.getElementById('machineType').value,
+                serialNo: document.getElementById('serialNo').value, inspector: document.getElementById('inspector').value,
+                inspectedDate: document.getElementById('inspectedDate').value
+            };
+            const checklistResults = [];
+            const rows = document.querySelectorAll('#checklistTable tbody tr[data-row-index]');
+            rows.forEach(row => {
+                const rowIndex = row.dataset.rowIndex;
+                const inspectionText = row.cells[0].innerText;
+                const selectedAction = row.querySelector(`input[name="action-row-${rowIndex}"]:checked`);
+                const resultText = row.querySelector('.result-input').value;
+                checklistResults.push({ item: inspectionText, action: selectedAction ? selectedAction.value : null, result: resultText });
+            });
+            return { header: headerData, checklist: checklistResults };
+        }
+
+        // --- EVENT LISTENERS ---
+        const submitButton = document.getElementById('submitButton');
+        const printButton = document.getElementById('printButton');
+        const dataModal = document.getElementById('dataModal');
+        const closeModal = document.getElementById('closeModal');
+        const copyJsonButton = document.getElementById('copyJsonButton');
+
+        submitButton.addEventListener('click', () => {
+            const data = collectData();
+            document.getElementById('jsonData').textContent = JSON.stringify(data, null, 2);
+            dataModal.classList.remove('hidden');
+        });
+        
+        printButton.addEventListener('click', () => { window.print(); });
+        closeModal.addEventListener('click', () => { dataModal.classList.add('hidden'); });
+
+        copyJsonButton.addEventListener('click', () => {
+            const jsonText = document.getElementById('jsonData').textContent;
+            const textArea = document.createElement('textarea');
+            textArea.value = jsonText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                copyJsonButton.textContent = 'Copied!';
+                setTimeout(() => { copyJsonButton.textContent = 'Copy JSON'; }, 2000);
+            } catch (err) { console.error('Failed to copy text: ', err); }
+            document.body.removeChild(textArea);
+        });
+
+        window.addEventListener('click', (event) => { if (event.target == dataModal) { dataModal.classList.add('hidden'); } });
+
+        // --- INITIALIZATION ---
+        renderChecklist();
+        document.getElementById('inspectedDate').valueAsDate = new Date();
+         // Add shake animation keyframes to the document's head
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } } .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }`;
+        document.head.appendChild(style);
+    });
+</script>
+
+</body>
+</html>
