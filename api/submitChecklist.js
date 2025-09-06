@@ -1,9 +1,7 @@
-// Import the Google Auth and Google Sheets libraries
+// This file does not need changes, but is included for completeness.
 const { google } = require('googleapis');
 
-// This is the main function Vercel will run to submit the checklist
 module.exports = async (request, response) => {
-    // We only want to handle POST requests
     if (request.method !== 'POST') {
         return response.status(405).send('Method Not Allowed');
     }
@@ -14,7 +12,6 @@ module.exports = async (request, response) => {
             return response.status(400).json({ status: 'fail', message: 'CustomerID is missing from the checklist data.' });
         }
 
-        // --- AUTHENTICATION WITH GOOGLE SHEETS ---
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -25,7 +22,6 @@ module.exports = async (request, response) => {
 
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Define the exact order of columns in your 'FilterTester' sheet
         const columnOrder = [
             'CustomerID', 'TechnicianID', 'Technician', 'InspectedDate',
             'Motor_Check', 'Motor_Gear_Oil', 'Motor_Gear_Condition', 'Pump_Seal',
@@ -38,13 +34,11 @@ module.exports = async (request, response) => {
             'Buzzer_Check', 'Emergency_Stop'
         ];
         
-        // Create a new row array with data in the correct order
-        const newRow = columnOrder.map(colId => data[colId] || ''); // Use data from request or default to empty string
+        const newRow = columnOrder.map(colId => data[colId] || '');
 
-        // Use the append method to add the new row to the 'FilterTester' sheet
         await sheets.spreadsheets.values.append({
             spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'FilterTester!A1', // Appending to this sheet
+            range: 'FilterTester!A1',
             valueInputOption: 'USER_ENTERED',
             resource: {
                 values: [newRow],

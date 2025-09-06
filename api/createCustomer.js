@@ -1,38 +1,26 @@
 // Import the Google Auth and Google Sheets libraries
 const { google } = require('googleapis');
 
-// Function to generate a unique Customer ID
-function generateCustomerID(allCustomerIDs) {
-    const prefix = "CUST";
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    let newID;
-    let sequence = 1;
-
-    do {
-        const sequenceStr = sequence.toString().padStart(4, '0');
-        newID = `${prefix}${year}${month}${sequenceStr}`;
-        sequence++;
-    } while (allCustomerIDs.has(newID)); // Ensure the new ID is unique
-
-    return newID;
+// Function to create a sanitized, combined Customer ID
+function createCombinedID(customerData) {
+    const { CustomerName, Country, MachineType, SerialNo } = customerData;
+    // Combine, convert to uppercase, and remove non-alphanumeric characters
+    const combined = `${CustomerName}${Country}${MachineType}${SerialNo}`.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return combined;
 }
 
-// This is the main function Vercel will run to create a new customer
 module.exports = async (request, response) => {
-    // We only want to handle POST requests
     if (request.method !== 'POST') {
         return response.status(405).send('Method Not Allowed');
     }
 
     try {
-        const { CustomerName, Country, MachineType, SerialNo } = request.body;
+        const customerData = request.body;
+        const { CustomerName, Country, MachineType, SerialNo } = customerData;
         if (!CustomerName || !Country || !MachineType || !SerialNo) {
              return response.status(400).json({ status: 'fail', message: 'All customer fields are required.' });
         }
 
-        // --- AUTHENTICATION WITH GOOGLE SHEETS ---
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -43,21 +31,37 @@ module.exports = async (request, response) => {
 
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Step 1: Read all existing CustomerIDs from the sheet to ensure uniqueness
-        const idColumnData = await sheets.spreadsheets.values.get({
+        // Step 1: Read all existing customers to check for duplicates
+        const customerListData = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'CustomerList!A:A', // Assuming CustomerID is in Column A
+            // Assuming CustomerID, CustomerName, Country, MachineType, SerialNo are in columns A-E
+            range: 'CustomerList!A:E', 
         });
-
-        const existingIDs = new Set(idColumnData.data.values ? idColumnData.data.values.flat() : []);
         
-        // Step 2: Generate a new, unique CustomerID
-        const newCustomerID = generateCustomerID(existingIDs);
+        const rows = customerListData.data.values || [];
+        const newCustomerCombinedID = createCombinedID(customerData);
 
-        // Step 3: Prepare the new row to be inserted
+        for (let i = 1; i < rows.length; i++) { // Start at 1 to skip header
+            const row = rows[i];
+            const existingCustomer = {
+                CustomerID: row[0],
+                CustomerName: row[1],
+                Country: row[2],
+                MachineType: row[3],
+                SerialNo: row[4],
+            };
+            const existingCombinedID = createCombinedID(existingCustomer);
+
+            if (existingCombinedID === newCustomerCombinedID) {
+                // Customer already exists, return the existing ID
+                return response.status(200).json({ status: 'exists', customerID: existingCustomer.CustomerID });
+            }
+        }
+        
+        // Step 2: If no duplicate found, create a new customer
+        const newCustomerID = `CUST-${Date.now()}`; // A simple unique ID
         const newRow = [newCustomerID, CustomerName, Country, MachineType, SerialNo];
         
-        // Step 4: Append the new row to the 'CustomerList' sheet
         await sheets.spreadsheets.values.append({
             spreadsheetId: process.env.SPREADSHEET_ID,
             range: 'CustomerList!A1',
@@ -67,8 +71,7 @@ module.exports = async (request, response) => {
             },
         });
         
-        // Step 5: Send the new CustomerID back to the frontend
-        response.status(200).json({ status: 'success', customerID: newCustomerID });
+        response.status(200).json({ status: 'created', customerID: newCustomerID });
 
     } catch (error) {
         console.error('API Error:', error);

@@ -5,39 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preventive Maintenance Checklist</title>
     
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Custom Tailwind Theme Configuration -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'primary-darkest': '#181A2F',
-                        'primary-dark': '#242E49',
-                        'primary-medium': '#37415C',
-                        'accent-peach': '#FDA481',
-                        'accent-red': '#B4182D',
-                        'accent-maroon': '#54162B',
+                        'brand-navy': '#0D1E4C',
+                        'brand-purple': '#C48CB3',
+                        'brand-light-purple': '#E5C9D7',
+                        'brand-blue': '#83A6CE',
+                        'brand-slate': '#26415E',
+                        'brand-dark-navy': '#0B1B32',
                     }
                 }
             }
         }
     </script>
     
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Custom CSS for additional styling -->
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #242E49; }
-        ::-webkit-scrollbar-thumb { background: #37415C; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #4a5570; }
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .apple-shadow {
+             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+        }
+        .table-header-sticky {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
         .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
+            border: 4px solid rgba(0, 0, 0, 0.1);
             border-radius: 50%;
-            border-top: 4px solid #FDA481;
+            border-top: 4px solid #0D1E4C;
             width: 24px;
             height: 24px;
             animation: spin 1s linear infinite;
@@ -48,63 +59,73 @@
         }
     </style>
 </head>
-<body class="bg-primary-darkest text-gray-300">
+<body class="bg-gray-50 text-brand-dark-navy">
 
-    <div id="login-view" class="flex items-center justify-center min-h-screen">
-        <div class="w-full max-w-md p-8 space-y-8 bg-primary-dark rounded-2xl shadow-2xl shadow-primary-darkest/50">
+    <!-- Login View -->
+    <div id="login-view" class="flex items-center justify-center min-h-screen p-4">
+        <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl apple-shadow">
             <div class="text-center">
-                <h2 class="text-3xl font-bold text-white">Welcome Back</h2>
-                <p class="mt-2 text-gray-400">Sign in to access the Maintenance Checklist</p>
+                <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Logo" class="mx-auto h-12 w-auto mb-4">
+                <h2 class="text-3xl font-bold text-brand-dark-navy">Maintenance Portal</h2>
+                <p class="mt-2 text-gray-600">Please sign in to continue</p>
             </div>
             <form id="login-form" class="mt-8 space-y-6">
-                <div class="rounded-md shadow-sm -space-y-px">
-                    <input id="username" name="username" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-600 bg-primary-medium text-white placeholder-gray-400 rounded-t-md focus:outline-none focus:ring-accent-peach focus:border-accent-peach sm:text-sm transition" placeholder="User">
-                    <input id="password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-600 bg-primary-medium text-white placeholder-gray-400 rounded-b-md focus:outline-none focus:ring-accent-peach focus:border-accent-peach sm:text-sm transition" placeholder="Password">
+                <div class="rounded-md -space-y-px">
+                    <input id="username" name="username" type="text" required class="appearance-none relative block w-full px-3 py-3 border border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-500 rounded-t-lg focus:outline-none focus:ring-brand-blue focus:border-brand-blue sm:text-sm transition" placeholder="User">
+                    <input id="password" name="password" type="password" required class="appearance-none relative block w-full px-3 py-3 border border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-500 rounded-b-lg focus:outline-none focus:ring-brand-blue focus:border-brand-blue sm:text-sm transition" placeholder="Password">
                 </div>
-                <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-primary-darkest bg-accent-peach hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-dark focus:ring-accent-peach transition">
+                <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-brand-navy hover:bg-brand-slate focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue transition">
                     Log In
                 </button>
-                 <p id="error-message" class="text-sm text-center text-accent-red h-4"></p>
+                 <p id="error-message" class="text-sm text-center text-red-600 h-4"></p>
             </form>
         </div>
     </div>
 
+    <!-- Checklist View (Initially Hidden) -->
     <div id="checklist-view" class="hidden">
         <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-            <div class="bg-primary-dark rounded-2xl shadow-2xl shadow-primary-darkest/50 p-6 sm:p-8">
-                <header class="mb-8 flex justify-between items-center">
+            <div class="bg-white rounded-2xl apple-shadow p-6 sm:p-8">
+                <header class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                         <h1 class="text-2xl sm:text-3xl font-bold text-white">Preventive Maintenance Checklist</h1>
-                         <p class="text-gray-400 mt-1">Logged in as: <span id="loggedInUserDisplay" class="font-bold text-accent-peach"></span></p>
+                         <h1 class="text-2xl sm:text-3xl font-bold text-brand-dark-navy">Preventive Maintenance Checklist</h1>
+                         <div id="dateTimeClock" class="text-sm text-gray-500 mt-1"></div>
                     </div>
-                    <button id="logoutButton" class="px-4 py-2 bg-accent-red text-white font-medium text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-accent-red/50 transition duration-300">
-                        Log Out
-                    </button>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                             <p id="loggedInUserDisplay" class="font-semibold text-brand-slate"></p>
+                             <p class="text-xs text-gray-500">Technician</p>
+                        </div>
+                        <img id="technicianPhoto" src="" alt="Technician" class="w-12 h-12 rounded-full object-cover bg-gray-200 apple-shadow">
+                        <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Logo" class="h-10 w-auto">
+                    </div>
                 </header>
 
-                <div class="mb-8 border-b border-gray-700 pb-8">
-                    <h2 class="text-xl font-bold text-white mb-4">Customer & Machine Details</h2>
+                <!-- Customer Details Form -->
+                <div class="mb-8 border-t border-gray-200 pt-6">
+                    <h2 class="text-xl font-bold text-brand-navy mb-4">Customer & Machine Details</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <input type="text" id="customerName" placeholder="Customer Name" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
-                        <input type="text" id="country" placeholder="Country" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
-                        <input type="text" id="machineType" placeholder="Machine Type" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
-                        <input type="text" id="serialNo" placeholder="Serial No." class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                        <input type="text" id="customerName" placeholder="Customer Name" class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue transition">
+                        <input type="text" id="country" placeholder="Country" class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue transition">
+                        <input type="text" id="machineType" placeholder="Machine Type" class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue transition">
+                        <input type="text" id="serialNo" placeholder="Serial No." class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue transition">
                         <div>
-                             <label for="inspectedDate" class="block text-sm font-medium text-gray-400 mb-1">Inspected Date</label>
-                             <input type="date" id="inspectedDate" class="w-full bg-primary-medium border border-gray-600 text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-accent-peach focus:border-accent-peach transition">
+                             <label for="inspectedDate" class="sr-only">Inspected Date</label>
+                             <input type="date" id="inspectedDate" class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue transition">
                         </div>
                     </div>
                 </div>
                 
-                <div class="overflow-x-auto rounded-lg border border-gray-700">
+                <!-- Checklist Table -->
+                <div class="overflow-x-auto rounded-lg border border-gray-200">
                     <table class="w-full text-sm text-left" id="checklistTable">
-                        <thead class="bg-primary-medium text-xs text-accent-peach uppercase">
+                        <thead class="bg-gray-100 text-xs text-brand-slate uppercase table-header-sticky">
                             <tr>
                                 <th class="px-6 py-4 font-semibold tracking-wider">Inspection List</th>
                                 <th class="px-6 py-4 text-center font-semibold tracking-wider" colspan="5">Required Action</th>
                                 <th class="px-6 py-4 font-semibold tracking-wider">Result</th>
                             </tr>
-                            <tr class="bg-primary-dark/50 border-b border-gray-700">
+                            <tr class="border-b border-gray-200">
                                 <td></td>
                                 <td class="w-12 text-center py-2 font-bold" title="Normal">N</td>
                                 <td class="w-12 text-center py-2 font-bold" title="Adjust">A</td>
@@ -114,12 +135,15 @@
                                 <td></td>
                             </tr>
                         </thead>
-                        <tbody id="checklist-body" class="text-gray-300"></tbody>
+                        <tbody id="checklist-body" class="text-gray-700"></tbody>
                     </table>
                 </div>
 
-                <div class="mt-8 flex justify-end items-center gap-4">
-                    <button id="submitButton" class="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-2.5 bg-accent-peach text-primary-darkest font-bold text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-accent-peach/50 transition duration-300 disabled:opacity-50 disabled:cursor-wait">
+                <div class="mt-8 flex flex-col sm:flex-row justify-end items-center gap-4">
+                     <button id="logoutButton" class="w-full sm:w-auto px-6 py-2.5 bg-gray-200 text-brand-slate font-bold text-sm rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-300/50 transition duration-300">
+                        Log Out
+                    </button>
+                    <button id="submitButton" class="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-2.5 bg-brand-navy text-white font-bold text-sm rounded-lg hover:bg-brand-slate focus:outline-none focus:ring-4 focus:ring-brand-navy/50 transition duration-300 disabled:opacity-50 disabled:cursor-wait">
                         <span id="submitButtonText">Create Customer & Submit</span>
                         <div id="submitSpinner" class="spinner hidden"></div>
                     </button>
@@ -128,9 +152,9 @@
         </div>
 
         <div id="submissionModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50 p-4">
-            <div class="bg-primary-dark rounded-lg shadow-2xl w-full max-w-md flex flex-col border border-gray-700 text-center p-8">
+            <div class="bg-white rounded-lg shadow-2xl w-full max-w-md flex flex-col text-center p-8">
                  <div id="modal-content"></div>
-                 <button id="closeModal" class="mt-6 px-4 py-2 bg-accent-red text-white font-medium text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-accent-red/50 transition duration-300">Close</button>
+                 <button id="closeModal" class="mt-6 px-4 py-2 bg-brand-slate text-white font-medium text-sm rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-4 focus:ring-brand-slate/50 transition duration-300">Close</button>
             </div>
         </div>
     </div>
@@ -138,6 +162,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             let loggedInTechnician = null;
+            let clockInterval = null;
 
             // --- DOM Elements ---
             const loginView = document.getElementById('login-view');
@@ -146,6 +171,15 @@
             const logoutButton = document.getElementById('logoutButton');
             const errorMessage = document.getElementById('error-message');
             
+            // --- Clock Function ---
+            function updateClock() {
+                const now = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                const dateString = now.toLocaleDateString(undefined, options);
+                const timeString = now.toLocaleTimeString();
+                document.getElementById('dateTimeClock').textContent = `${dateString}, ${timeString}`;
+            }
+
             // --- Login/Logout Logic ---
             loginForm.addEventListener('submit', async function(event) {
                 event.preventDefault();
@@ -163,10 +197,13 @@
                     if (response.ok && result.status === 'success') {
                         loggedInTechnician = result.username;
                         document.getElementById('loggedInUserDisplay').textContent = loggedInTechnician;
+                        document.getElementById('technicianPhoto').src = result.photoURL || 'https://placehold.co/100x100/E5C9D7/0D1E4C?text=Photo';
                         loginView.classList.add('hidden');
                         checklistView.classList.remove('hidden');
                         errorMessage.textContent = '';
                         loginForm.password.value = '';
+                        updateClock();
+                        clockInterval = setInterval(updateClock, 1000);
                     } else {
                         throw new Error(result.message || 'Invalid user or password.');
                     }
@@ -179,9 +216,9 @@
 
             logoutButton.addEventListener('click', () => {
                 loggedInTechnician = null;
+                clearInterval(clockInterval);
                 checklistView.classList.add('hidden');
                 loginView.classList.remove('hidden');
-                // Reset form fields on logout
                 document.getElementById('customerName').value = '';
                 document.getElementById('country').value = '';
                 document.getElementById('machineType').value = '';
@@ -192,39 +229,16 @@
             // --- Checklist Data and Rendering ---
             const checklistData = [
                 { category: 'Pump & Mechanical', items: [
-                    { text: 'Check the gear pump motor.', id: 'Motor_Check' },
-                    { text: 'Check the oil level of the motor gear.', id: 'Motor_Gear_Oil' },
-                    { text: 'Check the motor gear.', id: 'Motor_Gear_Condition' },
-                    { text: 'Check the packing seal at the gear pump.', id: 'Pump_Seal' },
-                    { text: 'Check for material leakage.', id: 'Material_Leakage' },
-                    { text: 'Check the joint between the pump and drive shaft.', id: 'Shaft_Joint' },
-                    { text: 'Check the gear pump rotation.', id: 'Pump_Rotation' },
-                    { text: 'Check the motor gear mounting.', id: 'Motor_Mounting' },
-                    { text: 'Check the filter screen retainer.', id: 'Filter_Retainer' },
-                    { text: 'Check gear pump cleaning/cleanliness.', id: 'Pump_Cleanliness' },
-                    { text: 'Check the safety pin on the shaft joint.', id: 'Shaft_Safety_Pin' }
+                    { text: 'Check the gear pump motor.', id: 'Motor_Check' }, { text: 'Check the oil level of the motor gear.', id: 'Motor_Gear_Oil' }, { text: 'Check the motor gear.', id: 'Motor_Gear_Condition' }, { text: 'Check the packing seal at the gear pump.', id: 'Pump_Seal' }, { text: 'Check for material leakage.', id: 'Material_Leakage' }, { text: 'Check the joint between the pump and drive shaft.', id: 'Shaft_Joint' }, { text: 'Check the gear pump rotation.', id: 'Pump_Rotation' }, { text: 'Check the motor gear mounting.', id: 'Motor_Mounting' }, { text: 'Check the filter screen retainer.', id: 'Filter_Retainer' }, { text: 'Check gear pump cleaning/cleanliness.', id: 'Pump_Cleanliness' }, { text: 'Check the safety pin on the shaft joint.', id: 'Shaft_Safety_Pin' }
                 ]},
                 { category: 'Heating System', items: [
-                    { text: 'Check the condition of the heater.', id: 'Heater_Condition' },
-                    { text: 'Check the thermocouple.', id: 'Thermocouple_Check' },
-                    { text: 'Check the temperature controller.', id: 'Temp_Controller' },
-                    { text: 'Check the insulation for heater cables.', id: 'Heater_Cable_Insulation' },
-                    { text: 'Check the heater cable and connection.', id: 'Heater_Cable_Connection' }
+                    { text: 'Check the condition of the heater.', id: 'Heater_Condition' }, { text: 'Check the thermocouple.', id: 'Thermocouple_Check' }, { text: 'Check the temperature controller.', id: 'Temp_Controller' }, { text: 'Check the insulation for heater cables.', id: 'Heater_Cable_Insulation' }, { text: 'Check the heater cable and connection.', id: 'Heater_Cable_Connection' }
                 ]},
                 { category: 'Electrical & Controls', items: [
-                    { text: 'Check the inverter of the gear pump motor.', id: 'Motor_Inverter' },
-                    { text: 'Check the closed-loop control for pressure.', id: 'Pressure_Control_Loop' },
-                    { text: 'Check the motor overload circuit breaker.', id: 'Motor_Overload_Breaker' },
-                    { text: 'Check the pressure transducer.', id: 'Pressure_Transducer' },
-                    { text: 'Check the indicator lamps.', id: 'Indicator_Lamps' },
-                    { text: 'Check all switches.', id: 'Switches_Check' },
-                    { text: 'Check the condition of the PC.', id: 'PC_Condition' }
+                    { text: 'Check the inverter of the gear pump motor.', id: 'Motor_Inverter' }, { text: 'Check the closed-loop control for pressure.', id: 'Pressure_Control_Loop' }, { text: 'Check the motor overload circuit breaker.', id: 'Motor_Overload_Breaker' }, { text: 'Check the pressure transducer.', id: 'Pressure_Transducer' }, { text: 'Check the indicator lamps.', id: 'Indicator_Lamps' }, { text: 'Check all switches.', id: 'Switches_Check' }, { text: 'Check the condition of the PC.', id: 'PC_Condition' }
                 ]},
                 { category: 'Alarms & Safety', items: [
-                    { text: 'Check the low-temperature alarm.', id: 'Low_Temp_Alarm' },
-                    { text: 'Check the high/low-pressure alarm.', id: 'Pressure_Alarms' },
-                    { text: 'Check the buzzer.', id: 'Buzzer_Check' },
-                    { text: 'Check the emergency stop button.', id: 'Emergency_Stop' }
+                    { text: 'Check the low-temperature alarm.', id: 'Low_Temp_Alarm' }, { text: 'Check the high/low-pressure alarm.', id: 'Pressure_Alarms' }, { text: 'Check the buzzer.', id: 'Buzzer_Check' }, { text: 'Check the emergency stop button.', id: 'Emergency_Stop' }
                 ]}
             ];
 
@@ -233,19 +247,19 @@
                 checklistBody.innerHTML = '';
                 let rowIndex = 0;
                 checklistData.forEach(section => {
-                    checklistBody.innerHTML += `<tr class="bg-primary-medium/40"><td colspan="8" class="px-6 py-3 font-bold text-white">${section.category}</td></tr>`;
+                    checklistBody.innerHTML += `<tr class="bg-gray-50"><td colspan="8" class="px-6 py-3 font-bold text-brand-navy">${section.category}</td></tr>`;
                     section.items.forEach(item => {
                         const actionName = `action-row-${rowIndex}`;
                         checklistBody.innerHTML += `
-                            <tr class="border-b border-gray-700 hover:bg-primary-medium/50 transition duration-150" data-item-id="${item.id}">
+                            <tr class="border-b border-gray-200 hover:bg-gray-100 transition duration-150" data-item-id="${item.id}">
                                 <td class="px-6 py-4">${item.text}</td>
                                 ${['N', 'A', 'C', 'R', 'I'].map(action => `
                                     <td class="text-center py-4">
-                                        <input type="radio" id="${actionName}-${action}" name="${actionName}" value="${action}" class="w-4 h-4 text-accent-peach bg-gray-700 border-gray-600 focus:ring-accent-peach">
+                                        <input type="radio" id="${actionName}-${action}" name="${actionName}" value="${action}" class="w-4 h-4 text-brand-blue bg-gray-100 border-gray-300 focus:ring-brand-blue">
                                     </td>
                                 `).join('')}
                                 <td class="px-6 py-4">
-                                    <input type="text" class="result-input w-full bg-primary-medium border border-gray-600 text-white rounded-md p-2 text-sm focus:ring-1 focus:ring-accent-peach focus:border-accent-peach" placeholder="Result...">
+                                    <input type="text" class="result-input w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-md p-2 text-sm focus:ring-1 focus:ring-brand-blue focus:border-brand-blue" placeholder="Result...">
                                 </td>
                             </tr>
                         `;
@@ -267,13 +281,15 @@
                 submitSpinner.classList.remove('hidden');
                 
                 try {
-                    // Step 1: Create Customer
                     const customerData = {
                         CustomerName: document.getElementById('customerName').value,
                         Country: document.getElementById('country').value,
                         MachineType: document.getElementById('machineType').value,
                         SerialNo: document.getElementById('serialNo').value,
                     };
+                    if (!customerData.CustomerName || !customerData.Country || !customerData.MachineType || !customerData.SerialNo) {
+                        throw new Error("All customer and machine fields are required.");
+                    }
 
                     const customerResponse = await fetch('/api/createCustomer', {
                         method: 'POST',
@@ -281,13 +297,11 @@
                         body: JSON.stringify(customerData),
                     });
                     const customerResult = await customerResponse.json();
-                    if (!customerResponse.ok) throw new Error(customerResult.message || 'Failed to create customer.');
+                    if (!customerResponse.ok) throw new Error(customerResult.message || 'Failed to find or create customer.');
+                    const customerID = customerResult.customerID;
 
-                    const newCustomerID = customerResult.customerID;
-
-                    // Step 2: Collect Checklist Data
                     const checklistResultData = {
-                        CustomerID: newCustomerID,
+                        CustomerID: customerID,
                         Technician: loggedInTechnician,
                         TechnicianID: loggedInTechnician,
                         InspectedDate: document.getElementById('inspectedDate').value,
@@ -299,19 +313,18 @@
                         checklistResultData[itemId] = selectedAction ? `${selectedAction.value} - ${resultText}` : resultText;
                     });
                     
-                    // Step 3: Submit Checklist
                     const checklistResponse = await fetch('/api/submitChecklist', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(checklistResultData),
                     });
                      const checklistSubmitResult = await checklistResponse.json();
-                    if (!checklistResponse.ok) throw new Error(checklistSubmitResult.message || 'Submission failed.');
+                    if (!checklistResponse.ok) throw new Error(checklistSubmitResult.message || 'Checklist submission failed.');
                     
-                    modalContent.innerHTML = `<h3 class="text-xl font-bold text-green-400 mb-4">Success!</h3><p class="text-gray-300">Customer and checklist have been recorded successfully. New Customer ID: ${newCustomerID}</p>`;
+                    modalContent.innerHTML = `<h3 class="text-xl font-bold text-green-600 mb-4">Success!</h3><p class="text-gray-700">Customer and checklist have been recorded successfully. Customer ID: ${customerID}</p>`;
                 
                 } catch (error) {
-                    modalContent.innerHTML = `<h3 class="text-xl font-bold text-red-500 mb-4">Error</h3><p class="text-gray-300">${error.message}</p>`;
+                    modalContent.innerHTML = `<h3 class="text-xl font-bold text-red-600 mb-4">Error</h3><p class="text-gray-700">${error.message}</p>`;
                 } finally {
                     submissionModal.classList.remove('hidden');
                     submitButton.disabled = false;

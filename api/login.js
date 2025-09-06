@@ -1,18 +1,14 @@
 // Import the Google Auth and Google Sheets libraries
 const { google } = require('googleapis');
 
-// This is the main function Vercel will run
 module.exports = async (request, response) => {
-    // We only want to handle POST requests for security
     if (request.method !== 'POST') {
         return response.status(405).send('Method Not Allowed');
     }
 
     try {
-        // Get the username and password from the request body
         const { username, password } = request.body;
         
-        // --- AUTHENTICATION WITH GOOGLE SHEETS ---
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -23,15 +19,17 @@ module.exports = async (request, response) => {
         
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Fetch data from the "TechnicianDetails" sheet
+        // Fetch data from the "TechnicianDetails" sheet, now including Photo column
         const sheetData = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'TechnicianDetails!A:E', 
+            // Assuming Photo is in Column F
+            range: 'TechnicianDetails!A:F', 
         });
 
         const rows = sheetData.data.values;
         let loginSuccess = false;
         let loggedInUsername = null;
+        let photoURL = null;
 
         if (rows && rows.length > 0) {
             for (let i = 1; i < rows.length; i++) {
@@ -41,15 +39,16 @@ module.exports = async (request, response) => {
                 
                 if (sheetUsername === username && sheetPassword === password) {
                     loginSuccess = true;
-                    loggedInUsername = sheetUsername; // Store the username
+                    loggedInUsername = sheetUsername;
+                    photoURL = row[5] || null; // Column F for Photo URL
                     break;
                 }
             }
         }
         
         if (loginSuccess) {
-            // Send username back to the frontend on successful login
-            response.status(200).json({ status: 'success', username: loggedInUsername });
+            // Send username and photoURL back to the frontend
+            response.status(200).json({ status: 'success', username: loggedInUsername, photoURL: photoURL });
         } else {
             response.status(401).json({ status: 'fail', message: 'Invalid credentials.' });
         }
