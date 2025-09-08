@@ -1,18 +1,22 @@
 const { google } = require('googleapis');
 
-// Helper function to delete the draft after submission
 async function deleteDraft(sheets, spreadsheetId, draftID) {
-    if (!draftID) return; // No draft to delete
+    if (!draftID) return;
     try {
-        const range = 'Drafts!A:A'; // Assuming DraftID is in column A
-        const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+        const res = await sheets.spreadsheets.values.get({ spreadsheetId, range: 'Drafts' });
         const rows = res.data.values;
         if (!rows) return;
 
-        const rowIndex = rows.findIndex(row => row[0] === draftID);
+        const draftIdColIndex = (rows[0] || []).indexOf('DraftID');
+        if (draftIdColIndex === -1) return;
+
+        const rowIndex = rows.findIndex(row => row[draftIdColIndex] === draftID);
         if (rowIndex === -1) return;
 
-        const sheetId = 0; // Find your sheet's GID by looking at the URL in browser (e.g., gid=0)
+        const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
+        const sheet = sheetInfo.data.sheets.find(s => s.properties.title === 'Drafts');
+        if (!sheet) return;
+        const sheetId = sheet.properties.sheetId;
         
         await sheets.spreadsheets.batchUpdate({
             spreadsheetId,
@@ -31,10 +35,8 @@ async function deleteDraft(sheets, spreadsheetId, draftID) {
         });
     } catch (err) {
         console.error(`Failed to delete draft ${draftID}`, err);
-        // We don't throw an error here because the main submission was successful
     }
 }
-
 
 module.exports = async (request, response) => {
     if (request.method !== 'POST') {
@@ -66,7 +68,6 @@ module.exports = async (request, response) => {
             resource: { values: [newRow] },
         });
 
-        // After successful submission, delete the draft
         await deleteDraft(sheets, process.env.SPREADSHEET_ID, data.DraftID);
         
         response.status(200).json({ status: 'success', message: 'Checklist submitted successfully.' });

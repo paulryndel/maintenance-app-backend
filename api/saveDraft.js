@@ -16,7 +16,7 @@ module.exports = async (request, response) => {
         });
         const sheets = google.sheets({ version: 'v4', auth });
 
-        const range = 'Drafts!A:AF';
+        const range = 'Drafts';
         const sheetData = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.SPREADSHEET_ID,
             range: range,
@@ -26,7 +26,6 @@ module.exports = async (request, response) => {
         const newRow = header.map(col => draftData[col] || '');
 
         if (draftData.DraftID) {
-            // Update existing draft
             const rows = sheetData.data.values;
             const draftIdColIndex = header.indexOf('DraftID');
             const rowIndex = rows.findIndex(row => row[draftIdColIndex] === draftData.DraftID);
@@ -42,7 +41,6 @@ module.exports = async (request, response) => {
             }
         }
         
-        // Append new draft
         const newDraftID = `DRAFT-${Date.now()}`;
         newRow[header.indexOf('DraftID')] = newDraftID;
 

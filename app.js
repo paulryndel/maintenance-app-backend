@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
             completedSection.innerHTML = `<h2 class="section-title">Completed Checklists</h2>`;
             if (state.completed.length > 0) {
                 let completedHTML = `<div class="space-y-2 mt-4">`;
-                 state.completed.slice(0, 5).forEach(item => {
+                 state.completed.slice(0, 5).forEach(item => { // Show last 5
                     completedHTML += `<div class="info-card">
                         <p class="font-bold">${item.CustomerName || 'N/A'}</p>
                         <p class="text-sm text-gray-600">Completed on: ${new Date(item.InspectedDate).toLocaleDateString()}</p>

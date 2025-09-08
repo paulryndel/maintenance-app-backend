@@ -21,7 +21,7 @@ body {
     position: sticky; top: 0; z-index: 10;
 }
 .table-header-sticky tr {
-    background-color: #fefcbf; /* Nice yellow color background */
+    background-color: #fefcbf;
 }
 .table-header-sticky tr th {
     border-bottom: 1px solid #e5e7eb;
