@@ -18,37 +18,42 @@ module.exports = async (request, response) => {
         
         const sheets = google.sheets({ version: 'v4', auth });
 
+        // Fetch all necessary columns from the "TechnicianDetails" sheet
         const sheetData = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'TechnicianDetails!A:F', 
+            range: 'TechnicianDetails!A:E', // Read columns A through E
         });
 
         const rows = sheetData.data.values;
         let loginSuccess = false;
-        let loggedInUsername = null;
+        let technicianName = null;
         let technicianId = null;
         let photoURL = null;
 
         if (rows && rows.length > 0) {
-            for (let i = 1; i < rows.length; i++) {
+            for (let i = 1; i < rows.length; i++) { // Start at 1 to skip header row
                 const row = rows[i];
-                // Assuming C=TechnicianID, D=User, E=Password, F=Photo
-                const sheetTechId = row[2]; 
-                const sheetUsername = row[3];
-                const sheetPassword = row[4];
+                
+                // --- Match the new column order ---
+                const sheetTechId = row[0];      // Column A: TechnicianID
+                const sheetTechName = row[1];    // Column B: Name
+                const sheetPhotoURL = row[2];    // Column C: Photo
+                const sheetUsername = row[3];    // Column D: User (for login)
+                const sheetPassword = row[4];    // Column E: Password (for login)
                 
                 if (sheetUsername === username && sheetPassword === password) {
                     loginSuccess = true;
-                    loggedInUsername = sheetUsername;
-                    technicianId = sheetTechId;
-                    photoURL = row[5] || null;
+                    technicianName = sheetTechName; // The name to display
+                    technicianId = sheetTechId;     // The ID to use for filtering
+                    photoURL = sheetPhotoURL || null;
                     break;
                 }
             }
         }
         
         if (loginSuccess) {
-            response.status(200).json({ status: 'success', username: loggedInUsername, technicianId: technicianId, photoURL: photoURL });
+            // Send the correct data back to the frontend
+            response.status(200).json({ status: 'success', username: technicianName, technicianId: technicianId, photoURL: photoURL });
         } else {
             response.status(401).json({ status: 'fail', message: 'Invalid credentials.' });
         }
