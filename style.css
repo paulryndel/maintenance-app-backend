@@ -74,18 +74,18 @@ body {
 .machine-card.selected {
     @apply border-brand-blue bg-blue-50 text-brand-dark;
 }
-.stats-container {
-    @apply bg-brand-yellow p-6 rounded-2xl apple-shadow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5;
+.stats-container-blue {
+    @apply bg-brand-blue p-6 rounded-2xl apple-shadow grid grid-cols-1 sm:grid-cols-3 gap-5;
 }
-.stat-card {
-    @apply bg-yellow-50/50 p-5 rounded-xl flex items-center gap-4;
+.stat-card-inner {
+    @apply flex flex-col items-center text-center;
 }
-.stat-icon {
-    @apply text-3xl p-3 bg-white/70 rounded-full;
+.stat-title-blue {
+    @apply text-sm font-medium text-white opacity-90 mb-2;
 }
-.stat-title {
-    @apply text-sm font-medium text-brand-dark opacity-80;
+.stat-value-box {
+    @apply bg-white w-24 h-24 rounded-lg flex items-center justify-center apple-shadow;
 }
-.stat-number {
-    @apply text-3xl font-extrabold text-brand-dark;
+.stat-number-blue {
+    @apply text-4xl font-extrabold text-brand-blue;
 }
