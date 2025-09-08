@@ -10,7 +10,11 @@
             theme: {
                 extend: {
                     colors: {
-                        'brand-blue': '#0064D2', 'brand-yellow': '#FFD400', 'brand-dark': '#212121', 'brand-gray': '#666666', 'brand-light-gray': '#F5F5F5',
+                        'brand-blue': '#0064D2',
+                        'brand-yellow': '#FFD400',
+                        'brand-dark': '#212121',
+                        'brand-gray': '#666666',
+                        'brand-light-gray': '#F5F5F5',
                     }
                 }
             }
@@ -43,13 +47,13 @@
 
     <!-- Main App Container (Initially Hidden) -->
     <div id="app-container" class="hidden">
-        <header class="bg-brand-blue text-white sticky top-0 z-20 apple-shadow">
+        <header class="bg-white text-white sticky top-0 z-20 apple-shadow">
             <div class="container mx-auto p-4 flex justify-between items-center">
-                <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Logo" class="h-10 w-auto invert brightness-0">
+                <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Logo" class="h-10 w-auto">
                 <div class="flex items-center gap-3">
                     <div class="text-right">
-                        <p id="loggedInUserDisplay" class="font-semibold"></p>
-                        <button id="logout-button" class="text-xs text-yellow-300 hover:underline">Log Out</button>
+                        <p id="loggedInUserDisplay" class="font-semibold text-brand-dark"></p>
+                        <button id="logout-button" class="text-xs text-brand-blue hover:underline">Log Out</button>
                     </div>
                     <img id="technicianPhoto" src="https://placehold.co/100x100/ffffff/0064D2?text=P" alt="Technician" class="w-11 h-11 rounded-full object-cover border-2 border-white">
                 </div>
@@ -66,7 +70,8 @@
                         <p class="mt-4 text-brand-gray">Loading your dashboard...</p>
                     </div>
                     <div id="dashboard-content" class="hidden">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+                        <!-- Stat Cards Container -->
+                        <div class="stats-container">
                             <div class="stat-card">
                                 <span class="stat-icon">👥</span>
                                 <div>
@@ -90,7 +95,7 @@
                             </div>
                         </div>
                         
-                        <button id="start-new-checklist-btn" class="button-yellow w-full">Start New Checklist</button>
+                        <button id="start-new-checklist-btn" class="button-primary w-full mt-8">Start New Checklist</button>
                         
                         <div id="drafts-section" class="mt-10"></div>
                         <div id="completed-section" class="mt-10"></div>
@@ -155,18 +160,19 @@
                         <select id="customer-select" class="input-field w-full mt-1"></select>
                     </div>
                 </div>
-                 <p class="text-sm text-center mt-4">Or <button id="add-new-customer-btn" class="link-button">Add a New Customer</button></p>
+                 <p class="text-sm text-center mt-4 text-brand-gray">Don't see the customer? <button id="add-new-customer-btn" class="link-button">Add New</button></p>
             </div>
             <div id="new-customer-view" class="hidden space-y-4 text-left">
+                 <h4 class="font-semibold text-brand-dark">Add New Customer Details</h4>
                 <input type="text" id="new-customer-name" class="input-field w-full" placeholder="Customer Name">
                 <input type="text" id="new-customer-country" class="input-field w-full" placeholder="Country">
                 <input type="text" id="new-customer-machinetype" class="input-field w-full" placeholder="Machine Type">
                 <input type="text" id="new-customer-serialno" class="input-field w-full" placeholder="Serial No.">
-                <p class="text-sm text-center mt-4">Or <button id="back-to-select-customer-btn" class="link-button">Select an Existing Customer</button></p>
+                <p class="text-sm text-center mt-4 text-brand-gray"><button id="back-to-select-customer-btn" class="link-button">Back to Customer List</button></p>
             </div>
             <div class="mt-8 flex justify-end gap-4">
                 <button id="cancel-start-checklist" class="button-secondary">Cancel</button>
-                <button id="confirm-start-checklist" class="button-yellow">Begin Checklist</button>
+                <button id="confirm-start-checklist" class="button-primary">Begin Checklist</button>
             </div>
         </div>
     </div>

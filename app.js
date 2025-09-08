@@ -48,7 +48,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeModalBtn = document.getElementById('closeModal');
 
     // --- RENDER FUNCTIONS ---
-    // (render, renderHomepage, renderChecklistPage, renderChecklistItems remain the same)
     function render() {
         Object.values(views).forEach(v => v.classList.add('hidden'));
         if (state.currentView === 'login') {
@@ -125,7 +124,8 @@ document.addEventListener('DOMContentLoaded', function() {
         checklistBody.innerHTML = '';
         let itemNumber = 1;
         checklistData.forEach(section => {
-            checklistBody.innerHTML += `<tr class="bg-gray-100"><td colspan="9" class="px-6 py-3 font-bold text-brand-dark">${section.category}</td></tr>`;
+            const categoryClass = section.category === 'Heating System' ? 'heating-section-header' : 'bg-gray-100';
+            checklistBody.innerHTML += `<tr class="${categoryClass}"><td colspan="9" class="px-6 py-3 font-bold text-brand-dark">${section.category}</td></tr>`;
             section.items.forEach(item => {
                 const actionName = `action-row-${itemNumber}`;
                 const savedValue = data[item.id] || '';
@@ -311,7 +311,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     backToHomeBtn.addEventListener('click', () => { state.currentView = 'homepage'; render(); });
 
-    // (saveDraftBtn and submitBtn handlers remain the same)
     saveDraftBtn.addEventListener('click', async () => {
         const checklistData = collectChecklistData();
         if (state.activeChecklist.isDraft) {
