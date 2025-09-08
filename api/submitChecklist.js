@@ -1,5 +1,40 @@
-// This file does not need changes, but is included for completeness.
 const { google } = require('googleapis');
+
+// Helper function to delete the draft after submission
+async function deleteDraft(sheets, spreadsheetId, draftID) {
+    if (!draftID) return; // No draft to delete
+    try {
+        const range = 'Drafts!A:A'; // Assuming DraftID is in column A
+        const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+        const rows = res.data.values;
+        if (!rows) return;
+
+        const rowIndex = rows.findIndex(row => row[0] === draftID);
+        if (rowIndex === -1) return;
+
+        const sheetId = 0; // Find your sheet's GID by looking at the URL in browser (e.g., gid=0)
+        
+        await sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: {
+                requests: [{
+                    deleteDimension: {
+                        range: {
+                            sheetId: sheetId,
+                            dimension: 'ROWS',
+                            startIndex: rowIndex,
+                            endIndex: rowIndex + 1
+                        }
+                    }
+                }]
+            }
+        });
+    } catch (err) {
+        console.error(`Failed to delete draft ${draftID}`, err);
+        // We don't throw an error here because the main submission was successful
+    }
+}
+
 
 module.exports = async (request, response) => {
     if (request.method !== 'POST') {
@@ -8,10 +43,6 @@ module.exports = async (request, response) => {
 
     try {
         const data = request.body;
-        if (!data.CustomerID) {
-            return response.status(400).json({ status: 'fail', message: 'CustomerID is missing from the checklist data.' });
-        }
-
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -19,31 +50,24 @@ module.exports = async (request, response) => {
             },
             scopes: ['https://www.googleapis.com/auth/spreadsheets'],
         });
-
         const sheets = google.sheets({ version: 'v4', auth });
 
-        const columnOrder = [
-            'CustomerID', 'TechnicianID', 'Technician', 'InspectedDate',
-            'Motor_Check', 'Motor_Gear_Oil', 'Motor_Gear_Condition', 'Pump_Seal',
-            'Material_Leakage', 'Shaft_Joint', 'Pump_Rotation', 'Motor_Mounting',
-            'Filter_Retainer', 'Pump_Cleanliness', 'Shaft_Safety_Pin', 'Heater_Condition',
-            'Thermocouple_Check', 'Temp_Controller', 'Heater_Cable_Insulation',
-            'Heater_Cable_Connection', 'Motor_Inverter', 'Pressure_Control_Loop',
-            'Motor_Overload_Breaker', 'Pressure_Transducer', 'Indicator_Lamps',
-            'Switches_Check', 'PC_Condition', 'Low_Temp_Alarm', 'Pressure_Alarms',
-            'Buzzer_Check', 'Emergency_Stop'
-        ];
-        
-        const newRow = columnOrder.map(colId => data[colId] || '');
+        const headerRes = await sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.SPREADSHEET_ID,
+            range: 'FilterTester!A1:AF1',
+        });
+        const header = headerRes.data.values[0];
+        const newRow = header.map(col => data[col] || '');
 
         await sheets.spreadsheets.values.append({
             spreadsheetId: process.env.SPREADSHEET_ID,
             range: 'FilterTester!A1',
             valueInputOption: 'USER_ENTERED',
-            resource: {
-                values: [newRow],
-            },
+            resource: { values: [newRow] },
         });
+
+        // After successful submission, delete the draft
+        await deleteDraft(sheets, process.env.SPREADSHEET_ID, data.DraftID);
         
         response.status(200).json({ status: 'success', message: 'Checklist submitted successfully.' });
 

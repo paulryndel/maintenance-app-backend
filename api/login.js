@@ -1,4 +1,3 @@
-// Import the Google Auth and Google Sheets libraries
 const { google } = require('googleapis');
 
 module.exports = async (request, response) => {
@@ -19,36 +18,37 @@ module.exports = async (request, response) => {
         
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Fetch data from the "TechnicianDetails" sheet, now including Photo column
         const sheetData = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.SPREADSHEET_ID,
-            // Assuming Photo is in Column F
             range: 'TechnicianDetails!A:F', 
         });
 
         const rows = sheetData.data.values;
         let loginSuccess = false;
         let loggedInUsername = null;
+        let technicianId = null;
         let photoURL = null;
 
         if (rows && rows.length > 0) {
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-                const sheetUsername = row[3]; // Column D for User
-                const sheetPassword = row[4]; // Column E for Password
+                // Assuming C=TechnicianID, D=User, E=Password, F=Photo
+                const sheetTechId = row[2]; 
+                const sheetUsername = row[3];
+                const sheetPassword = row[4];
                 
                 if (sheetUsername === username && sheetPassword === password) {
                     loginSuccess = true;
                     loggedInUsername = sheetUsername;
-                    photoURL = row[5] || null; // Column F for Photo URL
+                    technicianId = sheetTechId;
+                    photoURL = row[5] || null;
                     break;
                 }
             }
         }
         
         if (loginSuccess) {
-            // Send username and photoURL back to the frontend
-            response.status(200).json({ status: 'success', username: loggedInUsername, photoURL: photoURL });
+            response.status(200).json({ status: 'success', username: loggedInUsername, technicianId: technicianId, photoURL: photoURL });
         } else {
             response.status(401).json({ status: 'fail', message: 'Invalid credentials.' });
         }
