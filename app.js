@@ -119,8 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderChecklistPage() {
         document.getElementById('checklist-customer-name').textContent = state.activeChecklist.customerName;
-        // Logic to pre-fill the checklist form if it's a draft would go here
-        // For now, we just render the empty checklist
         renderChecklistItems(state.activeChecklist.data);
     }
 
@@ -133,7 +131,8 @@ document.addEventListener('DOMContentLoaded', function() {
             section.items.forEach(item => {
                 const actionName = `action-row-${itemNumber}`;
                 const savedValue = data[item.id] || '';
-                const [savedAction, savedResult] = savedValue.split(' - ');
+                const [savedAction, ...savedResultParts] = savedValue.split(' - ');
+                const savedResult = savedResultParts.join(' - ');
                 
                 let radioButtonsHTML = ['N', 'A', 'C', 'R', 'I'].map(action => `
                     <td class="text-center py-4">
@@ -207,8 +206,8 @@ document.addEventListener('DOMContentLoaded', function() {
             userDisplay.textContent = state.loggedInTechnician;
             if (state.photoURL) techPhoto.src = state.photoURL;
             
+            updateClock(); // Initial call to set the clock immediately
             clockInterval = setInterval(updateClock, 1000);
-            updateClock();
             render();
         } catch (err) {
             document.getElementById('login-error-message').textContent = err.message;
@@ -283,6 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const checklistData = collectChecklistData();
             if (state.activeChecklist.isDraft) {
+                // Pass the DraftID so the backend can delete it
                 checklistData.DraftID = state.activeChecklist.draftID;
             }
             
@@ -312,6 +312,16 @@ document.addEventListener('DOMContentLoaded', function() {
     closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
 
     // --- UTILITY FUNCTIONS & INITIALIZATION ---
+    
+    // ** THE FIX IS HERE: The updateClock function was missing **
+    function updateClock() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const dateString = now.toLocaleDateString(undefined, options);
+        const timeString = now.toLocaleTimeString();
+        clockDisplay.textContent = `${dateString}, ${timeString}`;
+    }
+
     function showModal(title, message) {
         modalBody.innerHTML = `<h3 class="text-xl font-bold mb-4">${title}</h3><p class="text-gray-700">${message}</p>`;
         modal.classList.remove('hidden');
