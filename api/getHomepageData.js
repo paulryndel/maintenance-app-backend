@@ -6,7 +6,6 @@ module.exports = async (request, response) => {
         if (!technicianId) {
             return response.status(400).json({ message: 'Technician ID is required.' });
         }
-
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -16,20 +15,17 @@ module.exports = async (request, response) => {
         });
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Fetch all data concurrently for better performance
         const [customerRes, draftRes, completedRes] = await Promise.all([
             sheets.spreadsheets.values.get({ spreadsheetId: process.env.SPREADSHEET_ID, range: 'CustomerList!A:E' }),
             sheets.spreadsheets.values.get({ spreadsheetId: process.env.SPREADSHEET_ID, range: 'Drafts' }),
             sheets.spreadsheets.values.get({ spreadsheetId: process.env.SPREADSHEET_ID, range: 'FilterTester' })
         ]);
 
-        // Process Customers
         const customers = (customerRes.data.values || []).slice(1).map(row => ({
             CustomerID: row[0], CustomerName: row[1], Country: row[2], MachineType: row[3], SerialNo: row[4]
         }));
         const customerMap = new Map(customers.map(c => [c.CustomerID, c.CustomerName]));
 
-        // Process Drafts
         const draftHeader = (draftRes.data.values || [[]])[0];
         const technicianIdColIndex = draftHeader.indexOf('TechnicianID');
         const drafts = (draftRes.data.values || []).slice(1)
@@ -41,7 +37,6 @@ module.exports = async (request, response) => {
                 return draftObj;
             });
 
-        // Process Completed Checklists
         const completedHeader = (completedRes.data.values || [[]])[0];
         const completed = (completedRes.data.values || []).slice(1)
             .filter(row => row[technicianIdColIndex] === technicianId)
@@ -52,15 +47,12 @@ module.exports = async (request, response) => {
                 return itemObj;
             });
 
-        // Calculate Dashboard Stats
         const stats = {
             customersVisited: new Set(completed.map(c => c.CustomerID)).size,
             machinesChecked: completed.length,
             draftsMade: drafts.length
         };
-
         response.status(200).json({ customers, drafts, completed, stats });
-
     } catch (error) {
         console.error("API Error:", error);
         response.status(500).json({ message: 'Failed to fetch homepage data.' });

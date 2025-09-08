@@ -15,13 +15,11 @@ module.exports = async (request, response) => {
             scopes: ['https://www.googleapis.com/auth/spreadsheets'],
         });
         const sheets = google.sheets({ version: 'v4', auth });
-
         const range = 'Drafts';
         const sheetData = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.SPREADSHEET_ID,
             range: range,
         });
-
         const header = sheetData.data.values[0];
         const newRow = header.map(col => draftData[col] || '');
 
@@ -50,9 +48,7 @@ module.exports = async (request, response) => {
             valueInputOption: 'USER_ENTERED',
             resource: { values: [newRow] },
         });
-
         response.status(200).json({ status: 'created', draftID: newDraftID });
-
     } catch (error) {
         console.error('API Error:', error);
         response.status(500).json({ message: 'Failed to save draft.' });
