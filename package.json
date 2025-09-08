@@ -1,13 +1,19 @@
 {
-  "name": "maintenance-checklist-app",
+  "name": "maintenance-app-backend",
   "version": "1.0.0",
-  "description": "A serverless app for a maintenance checklist.",
+  "description": "A preventive maintenance checklist application.",
   "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [
+    "maintenance",
+    "checklist",
+    "google-sheets"
+  ],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "googleapis": "^126.0.1"
   }
 }
-

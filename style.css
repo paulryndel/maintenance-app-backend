@@ -17,8 +17,6 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-
-/* Styles for the sticky/frozen table header */
 .table-header-sticky {
     position: sticky; top: 0; z-index: 10;
 }
@@ -28,8 +26,6 @@ body {
 .table-header-sticky tr th {
     border-bottom: 1px solid #e5e7eb;
 }
-
-/* General Component Styles */
 .input-field {
     @apply appearance-none relative block w-full px-3 py-3 border border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-brand-blue focus:border-brand-blue sm:text-sm transition;
 }
