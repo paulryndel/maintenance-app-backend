@@ -7,7 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
         dashboardStats: { customersVisited: 0, machinesChecked: 0, draftsMade: 0 },
         activeChecklist: {
             isDraft: false, draftID: null, customerID: null, customerName: null, data: {}
-        }
+        },
+        isAddingNewCustomer: false
     };
     let clockInterval = null;
 
@@ -19,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
         checklist: document.getElementById('checklist-view'),
     };
     const loginForm = document.getElementById('login-form');
+    const logoutButton = document.getElementById('logout-button');
     const userDisplay = document.getElementById('loggedInUserDisplay');
     const techPhoto = document.getElementById('technicianPhoto');
     const clockDisplay = document.getElementById('dateTimeClock');
@@ -29,16 +31,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const backToHomeBtn = document.getElementById('back-to-home');
     const saveDraftBtn = document.getElementById('save-draft-button');
     const submitBtn = document.getElementById('submit-button');
+    
+    // Start Checklist Modal Elements
     const startChecklistBtn = document.getElementById('start-new-checklist-btn');
     const startChecklistModal = document.getElementById('start-checklist-modal');
     const cancelStartChecklistBtn = document.getElementById('cancel-start-checklist');
     const confirmStartChecklistBtn = document.getElementById('confirm-start-checklist');
     const customerSelect = document.getElementById('customer-select');
+    const addNewCustomerBtn = document.getElementById('add-new-customer-btn');
+    const backToSelectCustomerBtn = document.getElementById('back-to-select-customer-btn');
+    const existingCustomerView = document.getElementById('existing-customer-view');
+    const newCustomerView = document.getElementById('new-customer-view');
+
     const modal = document.getElementById('submissionModal');
     const modalBody = document.getElementById('modal-body');
     const closeModalBtn = document.getElementById('closeModal');
 
     // --- RENDER FUNCTIONS ---
+    // (render, renderHomepage, renderChecklistPage, renderChecklistItems remain the same)
     function render() {
         Object.values(views).forEach(v => v.classList.add('hidden'));
         if (state.currentView === 'login') {
@@ -141,6 +151,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+
+    // --- API & DATA FUNCTIONS ---
     async function fetchHomepageData() {
         try {
             const response = await fetch(`/api/getHomepageData?technicianId=${state.technicianId}`);
@@ -171,7 +183,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         return data;
     }
-    
+
+    // --- EVENT HANDLERS ---
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button');
@@ -203,6 +216,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    logoutButton.addEventListener('click', () => {
+        state = { ...state, loggedInTechnician: null, technicianId: null, photoURL: null, currentView: 'login' };
+        clearInterval(clockInterval);
+        loginForm.reset();
+        render();
+    });
+
     dashboardContent.addEventListener('click', (e) => {
         const draftCard = e.target.closest('.draft-card');
         if (draftCard) {
@@ -219,28 +239,79 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    startChecklistBtn.addEventListener('click', () => startChecklistModal.classList.remove('hidden'));
-    cancelStartChecklistBtn.addEventListener('click', () => startChecklistModal.classList.add('hidden'));
+    startChecklistBtn.addEventListener('click', () => {
+        state.isAddingNewCustomer = false;
+        existingCustomerView.classList.remove('hidden');
+        newCustomerView.classList.add('hidden');
+        startChecklistModal.classList.remove('hidden');
+    });
 
-    confirmStartChecklistBtn.addEventListener('click', () => {
-        const selectedOption = customerSelect.options[customerSelect.selectedIndex];
-        if (!selectedOption.value) {
-            alert("Please select a customer.");
-            return;
-        }
-        state.activeChecklist = {
-            isDraft: false, draftID: null,
-            customerID: selectedOption.value,
-            customerName: selectedOption.dataset.name,
-            data: {}
-        };
-        state.currentView = 'checklist';
+    cancelStartChecklistBtn.addEventListener('click', () => {
         startChecklistModal.classList.add('hidden');
-        render();
+    });
+
+    addNewCustomerBtn.addEventListener('click', () => {
+        state.isAddingNewCustomer = true;
+        existingCustomerView.classList.add('hidden');
+        newCustomerView.classList.remove('hidden');
+    });
+
+    backToSelectCustomerBtn.addEventListener('click', () => {
+        state.isAddingNewCustomer = false;
+        existingCustomerView.classList.remove('hidden');
+        newCustomerView.classList.add('hidden');
+    });
+
+    confirmStartChecklistBtn.addEventListener('click', async () => {
+        try {
+            let customerID, customerName;
+
+            if (state.isAddingNewCustomer) {
+                const newCustomerData = {
+                    CustomerName: document.getElementById('new-customer-name').value,
+                    Country: document.getElementById('new-customer-country').value,
+                    MachineType: document.getElementById('new-customer-machinetype').value,
+                    SerialNo: document.getElementById('new-customer-serialno').value,
+                };
+                if (!newCustomerData.CustomerName || !newCustomerData.Country || !newCustomerData.MachineType || !newCustomerData.SerialNo) {
+                    throw new Error("All customer fields are required.");
+                }
+
+                const res = await fetch('/api/createCustomer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newCustomerData)
+                });
+                const result = await res.json();
+                if (!res.ok) throw new Error(result.message);
+                
+                customerID = result.customerID;
+                customerName = newCustomerData.CustomerName;
+            } else {
+                const selectedOption = customerSelect.options[customerSelect.selectedIndex];
+                if (!selectedOption.value) throw new Error("Please select a customer.");
+                customerID = selectedOption.value;
+                customerName = selectedOption.dataset.name;
+            }
+
+            state.activeChecklist = {
+                isDraft: false, draftID: null,
+                customerID: customerID,
+                customerName: customerName,
+                data: {}
+            };
+            state.currentView = 'checklist';
+            startChecklistModal.classList.add('hidden');
+            render();
+
+        } catch (error) {
+            alert(error.message);
+        }
     });
 
     backToHomeBtn.addEventListener('click', () => { state.currentView = 'homepage'; render(); });
 
+    // (saveDraftBtn and submitBtn handlers remain the same)
     saveDraftBtn.addEventListener('click', async () => {
         const checklistData = collectChecklistData();
         if (state.activeChecklist.isDraft) {
@@ -294,9 +365,10 @@ document.addEventListener('DOMContentLoaded', function() {
             spinner.classList.add('hidden');
         }
     });
-
+    
     closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
 
+    // --- UTILITY FUNCTIONS & INITIALIZATION ---
     function updateClock() {
         const now = new Date();
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -309,7 +381,6 @@ document.addEventListener('DOMContentLoaded', function() {
         modalBody.innerHTML = `<h3 class="text-xl font-bold mb-4">${title}</h3><p class="text-brand-gray">${message}</p>`;
         modal.classList.remove('hidden');
     }
-
     const checklistData = [
         { category: 'Pump & Mechanical', items: [
             { text: 'Check the gear pump motor.', id: 'Motor_Check' }, { text: 'Check the oil level of the motor gear.', id: 'Motor_Gear_Oil' }, { text: 'Check the motor gear.', id: 'Motor_Gear_Condition' }, { text: 'Check the packing seal at the gear pump.', id: 'Pump_Seal' }, { text: 'Check for material leakage.', id: 'Material_Leakage' }, { text: 'Check the joint between the pump and drive shaft.', id: 'Shaft_Joint' }, { text: 'Check the gear pump rotation.', id: 'Pump_Rotation' }, { text: 'Check the motor gear mounting.', id: 'Motor_Mounting' }, { text: 'Check the filter screen retainer.', id: 'Filter_Retainer' }, { text: 'Check gear pump cleaning/cleanliness.', id: 'Pump_Cleanliness' }, { text: 'Check the safety pin on the shaft joint.', id: 'Shaft_Safety_Pin' }

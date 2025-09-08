@@ -10,11 +10,7 @@
             theme: {
                 extend: {
                     colors: {
-                        'brand-blue': '#0064D2',
-                        'brand-yellow': '#FFD400',
-                        'brand-dark': '#212121',
-                        'brand-gray': '#666666',
-                        'brand-light-gray': '#F5F5F5',
+                        'brand-blue': '#0064D2', 'brand-yellow': '#FFD400', 'brand-dark': '#212121', 'brand-gray': '#666666', 'brand-light-gray': '#F5F5F5',
                     }
                 }
             }
@@ -53,7 +49,7 @@
                 <div class="flex items-center gap-3">
                     <div class="text-right">
                         <p id="loggedInUserDisplay" class="font-semibold"></p>
-                        <p class="text-xs opacity-80">Technician</p>
+                        <button id="logout-button" class="text-xs text-yellow-300 hover:underline">Log Out</button>
                     </div>
                     <img id="technicianPhoto" src="https://placehold.co/100x100/ffffff/0064D2?text=P" alt="Technician" class="w-11 h-11 rounded-full object-cover border-2 border-white">
                 </div>
@@ -62,7 +58,7 @@
 
         <!-- Homepage View -->
         <div id="homepage-view">
-            <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+             <div class="container mx-auto p-4 sm:p-6 lg:p-8">
                 <div id="dateTimeClock" class="text-sm text-brand-gray mb-6"></div>
                 <div id="homepage-content" class="space-y-10">
                     <div id="homepage-loader" class="text-center py-10">
@@ -73,18 +69,24 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
                             <div class="stat-card">
                                 <span class="stat-icon">👥</span>
-                                <p class="stat-title">Customers Visited</p>
-                                <p id="customers-visited-stat" class="stat-number"></p>
+                                <div>
+                                    <p class="stat-title">Customers Visited</p>
+                                    <p id="customers-visited-stat" class="stat-number"></p>
+                                </div>
                             </div>
                             <div class="stat-card">
                                 <span class="stat-icon">⚙️</span>
-                                <p class="stat-title">Machines Checked</p>
-                                <p id="machines-checked-stat" class="stat-number"></p>
+                                <div>
+                                    <p class="stat-title">Machines Checked</p>
+                                    <p id="machines-checked-stat" class="stat-number"></p>
+                                </div>
                             </div>
                             <div class="stat-card">
                                 <span class="stat-icon">📝</span>
-                                <p class="stat-title">Drafts in Progress</p>
-                                <p id="drafts-made-stat" class="stat-number"></p>
+                                <div>
+                                    <p class="stat-title">Drafts in Progress</p>
+                                    <p id="drafts-made-stat" class="stat-number"></p>
+                                </div>
                             </div>
                         </div>
                         
@@ -99,7 +101,7 @@
 
         <!-- Checklist View -->
         <div id="checklist-view" class="hidden">
-            <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+             <div class="container mx-auto p-4 sm:p-6 lg:p-8">
                 <button id="back-to-home" class="button-secondary mb-6">&larr; Back to Dashboard</button>
                 <div class="bg-white rounded-2xl apple-shadow p-6 sm:p-8">
                     <h1 class="text-2xl sm:text-3xl font-bold text-brand-dark mb-2">Maintenance Checklist</h1>
@@ -142,15 +144,25 @@
     <div id="start-checklist-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 class="section-title mb-6">Start a New Checklist</h3>
-            <div class="space-y-4 text-left">
-                <div>
-                    <label class="block text-sm font-medium text-brand-gray">1. Select Machine</label>
-                    <div class="machine-card selected">Filter Tester Machine</div>
+            <div id="existing-customer-view">
+                <div class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-sm font-medium text-brand-gray">1. Select Machine</label>
+                        <div class="machine-card selected">Filter Tester Machine</div>
+                    </div>
+                    <div>
+                        <label for="customer-select" class="block text-sm font-medium text-brand-gray">2. Select Customer</label>
+                        <select id="customer-select" class="input-field w-full mt-1"></select>
+                    </div>
                 </div>
-                <div>
-                    <label for="customer-select" class="block text-sm font-medium text-brand-gray">2. Select Customer</label>
-                    <select id="customer-select" class="input-field w-full mt-1"></select>
-                </div>
+                 <p class="text-sm text-center mt-4">Or <button id="add-new-customer-btn" class="link-button">Add a New Customer</button></p>
+            </div>
+            <div id="new-customer-view" class="hidden space-y-4 text-left">
+                <input type="text" id="new-customer-name" class="input-field w-full" placeholder="Customer Name">
+                <input type="text" id="new-customer-country" class="input-field w-full" placeholder="Country">
+                <input type="text" id="new-customer-machinetype" class="input-field w-full" placeholder="Machine Type">
+                <input type="text" id="new-customer-serialno" class="input-field w-full" placeholder="Serial No.">
+                <p class="text-sm text-center mt-4">Or <button id="back-to-select-customer-btn" class="link-button">Select an Existing Customer</button></p>
             </div>
             <div class="mt-8 flex justify-end gap-4">
                 <button id="cancel-start-checklist" class="button-secondary">Cancel</button>

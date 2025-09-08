@@ -49,6 +49,9 @@ body {
 .button-secondary {
     @apply px-5 py-2.5 bg-gray-200 text-brand-gray font-bold text-sm rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-300/50 transition duration-300 active:scale-95;
 }
+.link-button {
+    @apply text-brand-blue font-semibold hover:underline;
+}
 .section-title {
     @apply text-xl font-bold text-brand-dark pb-3 mb-4 border-b border-gray-200;
 }
@@ -71,7 +74,7 @@ body {
     @apply bg-white p-5 rounded-2xl apple-shadow flex items-center gap-4;
 }
 .stat-icon {
-    @apply text-3xl;
+    @apply text-3xl p-3 bg-brand-light-gray rounded-full;
 }
 .stat-title {
     @apply text-sm font-medium text-brand-gray;
