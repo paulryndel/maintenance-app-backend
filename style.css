@@ -74,6 +74,8 @@ body {
 .machine-card.selected {
     @apply border-brand-blue bg-blue-50 text-brand-dark;
 }
+
+/* New Dashboard Stats Styling */
 .stats-container-blue {
     @apply bg-brand-blue p-6 rounded-2xl apple-shadow grid grid-cols-1 sm:grid-cols-3 gap-5;
 }

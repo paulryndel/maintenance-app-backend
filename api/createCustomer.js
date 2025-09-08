@@ -1,9 +1,10 @@
+// Import the Google Auth and Google Sheets libraries
 const { google } = require('googleapis');
 
-// Function to create a sanitized, combined key for checking duplicates
-function createCombinedKey(customerData) {
+// Function to create a sanitized, combined Customer ID
+function createCombinedID(customerData) {
     const { CustomerName, Country, MachineType, SerialNo } = customerData;
-    // Combine, convert to uppercase, and remove all non-alphanumeric characters
+    // Combine, convert to uppercase, and remove non-alphanumeric characters
     const combined = `${CustomerName}${Country}${MachineType}${SerialNo}`.toUpperCase().replace(/[^A-Z0-9]/g, '');
     return combined;
 }
@@ -38,24 +39,27 @@ module.exports = async (request, response) => {
         });
         
         const rows = customerListData.data.values || [];
-        const newCustomerKey = createCombinedKey(customerData);
+        const newCustomerCombinedID = createCombinedID(customerData);
 
         for (let i = 1; i < rows.length; i++) { // Start at 1 to skip header
             const row = rows[i];
             const existingCustomer = {
-                CustomerID: row[0], CustomerName: row[1], Country: row[2], MachineType: row[3], SerialNo: row[4],
+                CustomerID: row[0],
+                CustomerName: row[1],
+                Country: row[2],
+                MachineType: row[3],
+                SerialNo: row[4],
             };
-            const existingKey = createCombinedKey(existingCustomer);
+            const existingCombinedID = createCombinedID(existingCustomer);
 
-            if (existingKey === newCustomerKey) {
+            if (existingCombinedID === newCustomerCombinedID) {
                 // Customer already exists, return the existing ID
                 return response.status(200).json({ status: 'exists', customerID: existingCustomer.CustomerID });
             }
         }
         
         // Step 2: If no duplicate found, create a new customer
-        // Generate a new unique CustomerID based on the combined key
-        const newCustomerID = newCustomerKey.slice(0, 20) + Date.now(); // Create a robust, unique ID
+        const newCustomerID = `CUST-${Date.now()}`; // A simple unique ID
         const newRow = [newCustomerID, CustomerName, Country, MachineType, SerialNo];
         
         await sheets.spreadsheets.values.append({

@@ -1,50 +1,20 @@
+// Import the Google Auth and Google Sheets libraries
 const { google } = require('googleapis');
 
-async function deleteDraft(sheets, spreadsheetId, draftID) {
-    if (!draftID) return;
-    try {
-        const res = await sheets.spreadsheets.values.get({ spreadsheetId, range: 'Drafts' });
-        const rows = res.data.values;
-        if (!rows) return;
-
-        const draftIdColIndex = (rows[0] || []).indexOf('DraftID');
-        if (draftIdColIndex === -1) return;
-
-        const rowIndex = rows.findIndex(row => row[draftIdColIndex] === draftID);
-        if (rowIndex === -1) return;
-
-        const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
-        const sheet = sheetInfo.data.sheets.find(s => s.properties.title === 'Drafts');
-        if (!sheet) return;
-        const sheetId = sheet.properties.sheetId;
-        
-        await sheets.spreadsheets.batchUpdate({
-            spreadsheetId,
-            resource: {
-                requests: [{
-                    deleteDimension: {
-                        range: {
-                            sheetId: sheetId,
-                            dimension: 'ROWS',
-                            startIndex: rowIndex,
-                            endIndex: rowIndex + 1
-                        }
-                    }
-                }]
-            }
-        });
-    } catch (err) {
-        console.error(`Failed to delete draft ${draftID}`, err);
-    }
-}
-
+// This is the main function Vercel will run to submit the checklist
 module.exports = async (request, response) => {
+    // We only want to handle POST requests
     if (request.method !== 'POST') {
         return response.status(405).send('Method Not Allowed');
     }
 
     try {
         const data = request.body;
+        if (!data.CustomerID) {
+            return response.status(400).json({ status: 'fail', message: 'CustomerID is missing from the checklist data.' });
+        }
+
+        // --- AUTHENTICATION WITH GOOGLE SHEETS ---
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -52,23 +22,34 @@ module.exports = async (request, response) => {
             },
             scopes: ['https://www.googleapis.com/auth/spreadsheets'],
         });
+
         const sheets = google.sheets({ version: 'v4', auth });
 
-        const headerRes = await sheets.spreadsheets.values.get({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'FilterTester!A1:AF1',
-        });
-        const header = headerRes.data.values[0];
-        const newRow = header.map(col => data[col] || '');
+        // Define the exact order of columns in your 'FilterTester' sheet
+        const columnOrder = [
+            'CustomerID', 'TechnicianID', 'Technician', 'InspectedDate',
+            'Motor_Check', 'Motor_Gear_Oil', 'Motor_Gear_Condition', 'Pump_Seal',
+            'Material_Leakage', 'Shaft_Joint', 'Pump_Rotation', 'Motor_Mounting',
+            'Filter_Retainer', 'Pump_Cleanliness', 'Shaft_Safety_Pin', 'Heater_Condition',
+            'Thermocouple_Check', 'Temp_Controller', 'Heater_Cable_Insulation',
+            'Heater_Cable_Connection', 'Motor_Inverter', 'Pressure_Control_Loop',
+            'Motor_Overload_Breaker', 'Pressure_Transducer', 'Indicator_Lamps',
+            'Switches_Check', 'PC_Condition', 'Low_Temp_Alarm', 'Pressure_Alarms',
+            'Buzzer_Check', 'Emergency_Stop'
+        ];
+        
+        // Create a new row array with data in the correct order
+        const newRow = columnOrder.map(colId => data[colId] || ''); // Use data from request or default to empty string
 
+        // Use the append method to add the new row to the 'FilterTester' sheet
         await sheets.spreadsheets.values.append({
             spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'FilterTester!A1',
+            range: 'FilterTester!A1', // Appending to this sheet
             valueInputOption: 'USER_ENTERED',
-            resource: { values: [newRow] },
+            resource: {
+                values: [newRow],
+            },
         });
-
-        await deleteDraft(sheets, process.env.SPREADSHEET_ID, data.DraftID);
         
         response.status(200).json({ status: 'success', message: 'Checklist submitted successfully.' });
 
