@@ -76,13 +76,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 state.drafts.forEach(draft => {
                     draftsHTML += `<div class="info-card cursor-pointer draft-card" data-draft-id='${JSON.stringify(draft)}'>
                         <p class="font-bold">${draft.CustomerName || 'N/A'}</p>
-                        <p class="text-sm text-gray-600">Last saved: ${new Date(draft.InspectedDate).toLocaleDateString()}</p>
+                        <p class="text-sm text-brand-gray">Last saved: ${new Date(draft.InspectedDate).toLocaleDateString()}</p>
                     </div>`;
                 });
                 draftsHTML += `</div>`;
                 draftsSection.innerHTML += draftsHTML;
             } else {
-                draftsSection.innerHTML += `<p class="text-gray-500 mt-4">No drafts found.</p>`;
+                draftsSection.innerHTML += `<p class="text-brand-gray mt-4">No drafts found.</p>`;
             }
 
             completedSection.innerHTML = `<h2 class="section-title">Completed Checklists</h2>`;
@@ -91,13 +91,13 @@ document.addEventListener('DOMContentLoaded', function() {
                  state.completed.slice(0, 5).forEach(item => { // Show last 5
                     completedHTML += `<div class="info-card">
                         <p class="font-bold">${item.CustomerName || 'N/A'}</p>
-                        <p class="text-sm text-gray-600">Completed on: ${new Date(item.InspectedDate).toLocaleDateString()}</p>
+                        <p class="text-sm text-brand-gray">Completed on: ${new Date(item.InspectedDate).toLocaleDateString()}</p>
                     </div>`;
                 });
                 completedHTML += `</div>`;
                 completedSection.innerHTML += completedHTML;
             } else {
-                completedSection.innerHTML += `<p class="text-gray-500 mt-4">No completed checklists found.</p>`;
+                completedSection.innerHTML += `<p class="text-brand-gray mt-4">No completed checklists found.</p>`;
             }
             
             homepageLoader.classList.add('hidden');
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
         checklistBody.innerHTML = '';
         let itemNumber = 1;
         checklistData.forEach(section => {
-            checklistBody.innerHTML += `<tr class="bg-gray-100"><td colspan="9" class="px-6 py-3 font-bold text-brand-navy">${section.category}</td></tr>`;
+            checklistBody.innerHTML += `<tr class="bg-gray-100"><td colspan="9" class="px-6 py-3 font-bold text-brand-dark">${section.category}</td></tr>`;
             section.items.forEach(item => {
                 const actionName = `action-row-${itemNumber}`;
                 const savedValue = data[item.id] || '';
@@ -128,8 +128,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     </td>`).join('');
 
                 checklistBody.innerHTML += `
-                    <tr class="border-b border-gray-200 hover:bg-gray-100" data-item-id="${item.id}">
-                        <td class="px-4 py-4 text-center text-gray-500">${itemNumber}</td>
+                    <tr class="border-b border-gray-200 hover:bg-gray-50" data-item-id="${item.id}">
+                        <td class="px-4 py-4 text-center text-brand-gray">${itemNumber}</td>
                         <td class="px-6 py-4">${item.text}</td>
                         ${radioButtonsHTML}
                         <td class="px-6 py-4">
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showModal(title, message) {
-        modalBody.innerHTML = `<h3 class="text-xl font-bold mb-4">${title}</h3><p class="text-gray-700">${message}</p>`;
+        modalBody.innerHTML = `<h3 class="text-xl font-bold mb-4">${title}</h3><p class="text-brand-gray">${message}</p>`;
         modal.classList.remove('hidden');
     }
 

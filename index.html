@@ -10,7 +10,11 @@
             theme: {
                 extend: {
                     colors: {
-                        'brand-navy': '#0D1E4C', 'brand-purple': '#C48CB3', 'brand-light-purple': '#E5C9D7', 'brand-blue': '#83A6CE', 'brand-slate': '#26415E', 'brand-dark-navy': '#0B1B32',
+                        'brand-blue': '#0064D2',
+                        'brand-yellow': '#FFD400',
+                        'brand-dark': '#212121',
+                        'brand-gray': '#666666',
+                        'brand-light-gray': '#F5F5F5',
                     }
                 }
             }
@@ -18,21 +22,21 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-50 text-brand-dark-navy">
+<body class="bg-brand-light-gray text-brand-dark">
+
     <!-- Login View -->
     <div id="login-view" class="flex items-center justify-center min-h-screen p-4">
-        <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl apple-shadow">
+        <div class="w-full max-w-sm p-8 space-y-8 bg-white rounded-2xl apple-shadow">
             <div class="text-center">
-                <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Logo" class="mx-auto h-12 w-auto mb-4">
-                <h2 class="text-3xl font-bold text-brand-dark-navy">Maintenance Portal</h2>
-                <p class="mt-2 text-gray-600">Please sign in to continue</p>
+                <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Logo" class="mx-auto h-12 w-auto mb-6">
+                <h2 class="text-2xl font-bold text-brand-dark">Sign in to your account</h2>
             </div>
             <form id="login-form" class="mt-8 space-y-6">
                 <div class="rounded-md -space-y-px">
-                    <input id="username" name="username" type="text" required class="input-field rounded-t-lg" placeholder="User">
+                    <input id="username" name="username" type="text" required class="input-field rounded-t-lg" placeholder="Username">
                     <input id="password" name="password" type="password" required class="input-field rounded-b-lg" placeholder="Password">
                 </div>
                 <button type="submit" class="button-primary w-full">Log In</button>
@@ -40,61 +44,69 @@
             </form>
         </div>
     </div>
+
     <!-- Main App Container (Initially Hidden) -->
     <div id="app-container" class="hidden">
-        <header class="bg-white apple-shadow sticky top-0 z-20">
+        <header class="bg-brand-blue text-white sticky top-0 z-20 apple-shadow">
             <div class="container mx-auto p-4 flex justify-between items-center">
-                <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Logo" class="h-10 w-auto">
-                <div class="flex items-center gap-4">
+                <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Logo" class="h-10 w-auto invert brightness-0">
+                <div class="flex items-center gap-3">
                     <div class="text-right">
-                        <p id="loggedInUserDisplay" class="font-semibold text-brand-slate"></p>
-                        <p class="text-xs text-gray-500">Technician</p>
+                        <p id="loggedInUserDisplay" class="font-semibold"></p>
+                        <p class="text-xs opacity-80">Technician</p>
                     </div>
-                    <img id="technicianPhoto" src="https://placehold.co/100x100/E5C9D7/0D1E4C?text=Photo" alt="Technician" class="w-12 h-12 rounded-full object-cover bg-gray-200 apple-shadow">
+                    <img id="technicianPhoto" src="https://placehold.co/100x100/ffffff/0064D2?text=P" alt="Technician" class="w-11 h-11 rounded-full object-cover border-2 border-white">
                 </div>
             </div>
         </header>
+
         <!-- Homepage View -->
         <div id="homepage-view">
             <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-                <div id="dateTimeClock" class="text-sm text-gray-500 mb-6"></div>
+                <div id="dateTimeClock" class="text-sm text-brand-gray mb-6"></div>
                 <div id="homepage-content" class="space-y-10">
                     <div id="homepage-loader" class="text-center py-10">
                         <div class="spinner mx-auto"></div>
-                        <p class="mt-4 text-gray-600">Loading your dashboard...</p>
+                        <p class="mt-4 text-brand-gray">Loading your dashboard...</p>
                     </div>
                     <div id="dashboard-content" class="hidden">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
                             <div class="stat-card">
+                                <span class="stat-icon">👥</span>
                                 <p class="stat-title">Customers Visited</p>
                                 <p id="customers-visited-stat" class="stat-number"></p>
                             </div>
                             <div class="stat-card">
+                                <span class="stat-icon">⚙️</span>
                                 <p class="stat-title">Machines Checked</p>
                                 <p id="machines-checked-stat" class="stat-number"></p>
                             </div>
                             <div class="stat-card">
+                                <span class="stat-icon">📝</span>
                                 <p class="stat-title">Drafts in Progress</p>
                                 <p id="drafts-made-stat" class="stat-number"></p>
                             </div>
                         </div>
-                        <button id="start-new-checklist-btn" class="button-primary w-full sm:w-auto">Start New Checklist</button>
+                        
+                        <button id="start-new-checklist-btn" class="button-yellow w-full">Start New Checklist</button>
+                        
                         <div id="drafts-section" class="mt-10"></div>
                         <div id="completed-section" class="mt-10"></div>
                     </div>
                 </div>
             </div>
         </div>
+
         <!-- Checklist View -->
         <div id="checklist-view" class="hidden">
             <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-                <button id="back-to-home" class="button-secondary mb-6">&larr; Back to Homepage</button>
+                <button id="back-to-home" class="button-secondary mb-6">&larr; Back to Dashboard</button>
                 <div class="bg-white rounded-2xl apple-shadow p-6 sm:p-8">
-                    <h1 class="text-2xl sm:text-3xl font-bold text-brand-dark-navy mb-2">Maintenance Checklist</h1>
-                    <p class="text-gray-600 mb-6">Customer: <span id="checklist-customer-name" class="font-semibold"></span></p>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-brand-dark mb-2">Maintenance Checklist</h1>
+                    <p class="text-brand-gray mb-6">Customer: <span id="checklist-customer-name" class="font-semibold text-brand-dark"></span></p>
                     <div class="overflow-auto rounded-lg border border-gray-200" style="max-height: 60vh;">
                         <table class="w-full text-sm text-left" id="checklistTable">
-                            <thead class="text-xs text-brand-slate uppercase table-header-sticky">
+                            <thead class="text-xs text-brand-dark uppercase table-header-sticky">
                                 <tr class="header-row-1">
                                     <th class="px-4 py-4 font-semibold tracking-wider w-16">Item #</th>
                                     <th class="px-6 py-4 font-semibold tracking-wider">Inspection List</th>
@@ -116,32 +128,33 @@
                     </div>
                     <div class="mt-8 flex flex-col sm:flex-row justify-end items-center gap-4">
                         <button id="save-draft-button" class="button-secondary w-full sm:w-auto">Save Draft</button>
-                        <button id="submit-button" class="button-primary flex items-center justify-center gap-2 w-full sm:w-auto">
+                        <button id="submit-button" class="button-yellow flex items-center justify-center gap-2 w-full sm:w-auto">
                             <span id="submitButtonText">Finalize & Submit</span>
-                            <div id="submitSpinner" class="spinner hidden"></div>
+                            <div id="submitSpinner" class="spinner-dark hidden"></div>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
     <!-- Modals -->
     <div id="start-checklist-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 class="section-title mb-6">Start a New Checklist</h3>
             <div class="space-y-4 text-left">
                 <div>
-                    <label for="machine-select" class="block text-sm font-medium text-gray-700">1. Select Machine</label>
+                    <label class="block text-sm font-medium text-brand-gray">1. Select Machine</label>
                     <div class="machine-card selected">Filter Tester Machine</div>
                 </div>
                 <div>
-                    <label for="customer-select" class="block text-sm font-medium text-gray-700">2. Select Customer</label>
+                    <label for="customer-select" class="block text-sm font-medium text-brand-gray">2. Select Customer</label>
                     <select id="customer-select" class="input-field w-full mt-1"></select>
                 </div>
             </div>
             <div class="mt-8 flex justify-end gap-4">
                 <button id="cancel-start-checklist" class="button-secondary">Cancel</button>
-                <button id="confirm-start-checklist" class="button-primary">Begin Checklist</button>
+                <button id="confirm-start-checklist" class="button-yellow">Begin Checklist</button>
             </div>
         </div>
     </div>
@@ -151,6 +164,7 @@
              <button id="closeModal" class="button-secondary mt-6">Close</button>
         </div>
     </div>
+
     <script src="app.js"></script>
 </body>
 </html>
