@@ -2,97 +2,97 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Your custom CSS from the old styles.css file goes here */
-body { 
-    font-family: 'Inter', sans-serif;
-    background-color: #F5F5F5; /* brand-light-gray */
-}
-.apple-shadow {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-.spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-radius: 50%;
-    border-top: 4px solid #0064D2; /* brand-blue */
-    width: 24px;
-    height: 24px;
-    animation: spin 1s linear infinite;
-}
-.spinner-dark {
-    border-top-color: #212121; /* brand-dark */
-}
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+@layer base {
+    body { 
+        font-family: 'Inter', sans-serif;
+        @apply bg-brand-light-gray text-brand-dark;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 }
 
-/* Table Header */
-.table-header-sticky {
-    position: sticky; top: 0; z-index: 10;
-}
-.table-header-sticky tr {
-    background-color: #FFD400; /* brand-yellow */
-}
-.table-header-sticky tr th {
-    border-bottom: 2px solid #e5e7eb;
-    color: #212121; /* brand-dark */
-}
-.heating-section-header {
-    background-color: #0064D2 !important; /* brand-blue */
-    color: white !important;
-}
-
-/* General Component Styles */
-.input-field {
-    @apply appearance-none relative block w-full px-4 py-3 border border-gray-300 bg-gray-50 text-brand-dark placeholder-brand-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent sm:text-sm transition;
-}
-.input-radio {
-    @apply w-4 h-4 text-brand-blue bg-gray-100 border-gray-300 focus:ring-brand-blue;
-}
-.button-primary {
-    @apply group relative flex justify-center py-3 px-5 border border-transparent text-sm font-bold rounded-xl text-white bg-brand-blue hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-wait;
-}
-.button-yellow {
-    @apply group relative flex justify-center py-4 px-6 border border-transparent text-base font-bold rounded-xl text-brand-dark bg-brand-yellow hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-yellow transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-wait;
-}
-.button-secondary {
-    @apply px-5 py-2.5 bg-gray-200 text-brand-gray font-bold text-sm rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-300/50 transition duration-300 active:scale-95;
-}
-.link-button {
-    @apply text-brand-blue font-semibold hover:underline;
-}
-.section-title {
-    @apply text-xl font-bold text-brand-dark pb-3 mb-4 border-b border-gray-200;
-}
-.info-card {
-    @apply bg-white p-4 rounded-xl apple-shadow border border-transparent transition hover:shadow-lg hover:border-brand-blue;
-}
-.modal-overlay {
-    @apply fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4 transition-opacity backdrop-blur-sm;
-}
-.modal-content {
-    @apply bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col p-6;
-}
-.machine-card {
-    @apply p-4 border-2 border-gray-200 rounded-lg text-center font-semibold cursor-pointer transition;
-}
-.machine-card.selected {
-    @apply border-brand-blue bg-blue-50 text-brand-dark;
-}
-
-/* New Dashboard Stats Styling */
-.stats-container-blue {
-    @apply bg-brand-blue p-6 rounded-2xl apple-shadow grid grid-cols-1 sm:grid-cols-3 gap-5;
-}
-.stat-card-inner {
-    @apply flex flex-col items-center text-center;
-}
-.stat-title-blue {
-    @apply text-sm font-medium text-white opacity-90 mb-2;
-}
-.stat-value-box {
-    @apply bg-white w-24 h-24 rounded-lg flex items-center justify-center apple-shadow;
-}
-.stat-number-blue {
-    @apply text-4xl font-extrabold text-brand-blue;
+@layer components {
+    .apple-shadow {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top: 4px solid #0064D2; /* brand-blue */
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+    }
+    .spinner-dark {
+        border-top-color: #212121; /* brand-dark */
+    }
+    .table-header-sticky {
+        position: sticky; 
+        top: 0; 
+        z-index: 10;
+    }
+    .table-header-sticky tr {
+        background-color: #FFD400; /* brand-yellow */
+    }
+    .table-header-sticky tr th {
+        border-bottom: 2px solid #e5e7eb;
+        color: #212121; /* brand-dark */
+    }
+    .heating-section-header {
+        background-color: #0064D2 !important; /* brand-blue */
+        color: white !important;
+    }
+    .input-field {
+        @apply appearance-none relative block w-full px-4 py-3 border border-gray-300 bg-gray-50 text-brand-dark placeholder-brand-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent sm:text-sm transition;
+    }
+    .input-radio {
+        @apply w-4 h-4 text-brand-blue bg-gray-100 border-gray-300 focus:ring-brand-blue;
+    }
+    .button-primary {
+        @apply group relative flex justify-center py-3 px-5 border border-transparent text-sm font-bold rounded-xl text-white bg-brand-blue hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-wait;
+    }
+    .button-yellow {
+        @apply group relative flex justify-center py-4 px-6 border border-transparent text-base font-bold rounded-xl text-brand-dark bg-brand-yellow hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-yellow transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-wait;
+    }
+    .button-secondary {
+        @apply px-5 py-2.5 bg-gray-200 text-brand-gray font-bold text-sm rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-300/50 transition duration-300 active:scale-95;
+    }
+    .link-button {
+        @apply text-brand-blue font-semibold hover:underline;
+    }
+    .section-title {
+        @apply text-xl font-bold text-brand-dark pb-3 mb-4 border-b border-gray-200;
+    }
+    .info-card {
+        @apply bg-white p-4 rounded-xl apple-shadow border border-transparent transition hover:shadow-lg hover:border-brand-blue;
+    }
+    .modal-overlay {
+        @apply fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4 transition-opacity backdrop-blur-sm;
+    }
+    .modal-content {
+        @apply bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col p-6;
+    }
+    .machine-card {
+        @apply p-4 border-2 border-gray-200 rounded-lg text-center font-semibold cursor-pointer transition;
+    }
+    .machine-card.selected {
+        @apply border-brand-blue bg-blue-50 text-brand-dark;
+    }
+    .stats-container-blue {
+        @apply bg-brand-blue p-6 rounded-2xl apple-shadow grid grid-cols-1 sm:grid-cols-3 gap-5;
+    }
+    .stat-card-inner {
+        @apply flex flex-col items-center text-center;
+    }
+    .stat-title-blue {
+        @apply text-sm font-medium text-white opacity-90 mb-2;
+    }
+    .stat-value-box {
+        @apply bg-white w-24 h-24 rounded-lg flex items-center justify-center apple-shadow;
+    }
+    .stat-number-blue {
+        @apply text-4xl font-extrabold text-brand-blue;
+    }
 }
