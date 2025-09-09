@@ -21,6 +21,14 @@
             </div>
             <form id="login-form" class="mt-8 space-y-6">
                 <div class="rounded-md -space-y-px">
+                    <div>
+                        <label for="username" class="sr-only">Username</label>
+                        <input id="username" name="username" type="text" required class="input-field rounded-t-lg" placeholder="Username">
+                    </div>
+                    <div>
+                        <label for="password" class="sr-only">Password</label>
+                        <input id="password" name="password" type="password" required class="input-field rounded-b-lg" placeholder="Password">
+                    </div>
                 </div>
                 <button type="submit" class="button-primary w-full">Log In</button>
                 <p id="login-error-message" class="text-sm text-center text-red-600 h-4"></p>
@@ -30,29 +38,25 @@
 
     <div id="app-container" class="hidden">
         <header class="bg-white text-white sticky top-0 z-20 apple-shadow">
-            <div class="container mx-auto p-4 flex justify-between items-center">
-            </div>
+            <!-- App header content will be populated by app.js -->
         </header>
 
         <div id="homepage-view">
              <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+                <!-- Homepage content will be populated by app.js -->
             </div>
         </div>
 
         <div id="checklist-view" class="hidden">
              <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+                <!-- Checklist content will be populated by app.js -->
             </div>
         </div>
     </div>
 
     <div id="start-checklist-modal" class="modal-overlay hidden">
         <div class="modal-content">
-            <h3 class="section-title mb-6">Start a New Checklist</h3>
-            <div id="existing-customer-view">
-            <div id="new-customer-view" class="hidden space-y-4 text-left">
-            </div>
-            <div class="mt-8 flex justify-end gap-4">
-            </div>
+            <!-- Modal content will be populated by app.js -->
         </div>
     </div>
     <div id="submissionModal" class="modal-overlay hidden">
