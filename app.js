@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (state.currentView === 'login') {
             views.login.classList.remove('hidden');
         } else {
-            views.app.style.display = 'flex';
+            views.app.classList.remove('hidden');
             if (state.currentView === 'homepage') {
                 views.homepage.classList.remove('hidden');
                 renderHomepage();
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let itemNumber = 1;
         checklistData.forEach(section => {
             const categoryClass = section.category === 'Heating System' ? 'heating-section-header' : 'bg-gray-100';
-            checklistBody.innerHTML += `<tr class="${categoryClass}"><td colspan="9" class="px-6 py-3 font-bold">${section.category}</td></tr>`;
+            checklistBody.innerHTML += `<tr class="${categoryClass}"><td colspan="9" class="px-6 py-3 font-bold text-brand-dark">${section.category}</td></tr>`;
             section.items.forEach(item => {
                 const actionName = `action-row-${itemNumber}`;
                 const savedValue = data[item.id] || '';
@@ -217,7 +217,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     logoutButton.addEventListener('click', () => {
-        location.reload();
+        state = { ...state, loggedInTechnician: null, technicianId: null, photoURL: null, currentView: 'login' };
+        clearInterval(clockInterval);
+        loginForm.reset();
+        render();
     });
 
     dashboardContent.addEventListener('click', (e) => {
