@@ -11,18 +11,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="bg-brand-light-gray text-brand-dark">
+<body class="bg-light text-dark">
 
     <div id="login-view" class="flex items-center justify-center min-h-screen p-4">
         <div class="w-full max-w-sm p-8 space-y-8 bg-white rounded-2xl apple-shadow">
             <div class="text-center">
                 <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Logo" class="mx-auto h-12 w-auto mb-6">
-                <h2 class="text-2xl font-bold text-brand-dark">Sign in to your account</h2>
+                <h2 class="text-2xl font-bold text-dark">Sign in to your account</h2>
             </div>
             <form id="login-form" class="mt-8 space-y-6">
                 <div class="rounded-md -space-y-px">
-                    <input id="username" name="username" type="text" required class="input-field rounded-t-lg" placeholder="Username">
-                    <input id="password" name="password" type="password" required class="input-field rounded-b-lg" placeholder="Password">
                 </div>
                 <button type="submit" class="button-primary w-full">Log In</button>
                 <p id="login-error-message" class="text-sm text-center text-red-600 h-4"></p>
@@ -33,102 +31,16 @@
     <div id="app-container" class="hidden">
         <header class="bg-white text-white sticky top-0 z-20 apple-shadow">
             <div class="container mx-auto p-4 flex justify-between items-center">
-                <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Logo" class="h-10 w-auto">
-                <div class="flex items-center gap-3">
-                    <div class="text-right">
-                        <p id="loggedInUserDisplay" class="font-semibold text-brand-dark"></p>
-                        <button id="logout-button" class="text-xs text-brand-blue hover:underline">Log Out</button>
-                    </div>
-                    <img id="technicianPhoto" src="https://placehold.co/100x100/ffffff/0064D2?text=P" alt="Technician" class="w-11 h-11 rounded-full object-cover border-2 border-white">
-                </div>
             </div>
         </header>
 
         <div id="homepage-view">
              <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-                <div id="dateTimeClock" class="text-sm text-brand-gray mb-6"></div>
-                <div id="homepage-content" class="space-y-10">
-                    <div id="homepage-loader" class="text-center py-10">
-                        <div class="spinner mx-auto"></div>
-                        <p class="mt-4 text-brand-gray">Loading your dashboard...</p>
-                    </div>
-                    <div id="dashboard-content" class="hidden">
-                        <div class="stats-container-blue">
-                            <div class="stat-card-inner">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white opacity-75 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                                <p class="stat-title-blue">Customers Visited</p>
-                                <div class="stat-value-box">
-                                    <p id="customers-visited-stat" class="stat-number-blue"></p>
-                                </div>
-                            </div>
-                            <div class="stat-card-inner">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white opacity-75 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <p class="stat-title-blue">Machines Checked</p>
-                                <div class="stat-value-box">
-                                    <p id="machines-checked-stat" class="stat-number-blue"></p>
-                                </div>
-                            </div>
-                            <div class="stat-card-inner">
-                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white opacity-75 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <p class="stat-title-blue">Drafts in Progress</p>
-                                <div class="stat-value-box">
-                                    <p id="drafts-made-stat" class="stat-number-blue"></p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <button id="start-new-checklist-btn" class="button-yellow w-full mt-8">Start New Checklist</button>
-                        
-                        <div id="drafts-section" class="mt-10"></div>
-                        <div id="completed-section" class="mt-10"></div>
-                    </div>
-                </div>
             </div>
         </div>
 
         <div id="checklist-view" class="hidden">
              <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-                <button id="back-to-home" class="button-secondary mb-6">&larr; Back to Dashboard</button>
-                <div class="bg-white rounded-2xl apple-shadow p-6 sm:p-8">
-                    <h1 class="text-2xl sm:text-3xl font-bold text-brand-dark mb-2">Maintenance Checklist</h1>
-                    <p class="text-brand-gray mb-6">Customer: <span id="checklist-customer-name" class="font-semibold text-brand-dark"></span></p>
-                    <div class="overflow-auto rounded-lg border border-gray-200" style="max-height: 60vh;">
-                        <table class="w-full text-sm text-left" id="checklistTable">
-                            <thead class="text-xs text-brand-dark uppercase table-header-sticky">
-                                <tr class="header-row-1">
-                                    <th class="px-4 py-4 font-semibold tracking-wider w-16">Item #</th>
-                                    <th class="px-6 py-4 font-semibold tracking-wider">Inspection List</th>
-                                    <th class="px-6 py-4 text-center font-semibold tracking-wider" colspan="5">Required Action</th>
-                                    <th class="px-6 py-4 font-semibold tracking-wider">Result</th>
-                                </tr>
-                                <tr class="header-row-2">
-                                    <th></th><th></th>
-                                    <th class="w-12 text-center py-2 font-bold" title="Normal">N</th>
-                                    <th class="w-12 text-center py-2 font-bold" title="Adjust">A</th>
-                                    <th class="w-12 text-center py-2 font-bold" title="Clean">C</th>
-                                    <th class="w-12 text-center py-2 font-bold" title="Replace">R</th>
-                                    <th class="w-12 text-center py-2 font-bold" title="Improve">I</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody id="checklist-body" class="text-gray-700"></tbody>
-                        </table>
-                    </div>
-                    <div class="mt-8 flex flex-col sm:flex-row justify-end items-center gap-4">
-                        <button id="save-draft-button" class="button-secondary w-full sm:w-auto">Save Draft</button>
-                        <button id="submit-button" class="button-yellow flex items-center justify-center gap-2 w-full sm:w-auto">
-                            <span id="submitButtonText">Finalize & Submit</span>
-                            <div id="submitSpinner" class="spinner-dark hidden"></div>
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -137,29 +49,9 @@
         <div class="modal-content">
             <h3 class="section-title mb-6">Start a New Checklist</h3>
             <div id="existing-customer-view">
-                <div class="space-y-4 text-left">
-                    <div>
-                        <label class="block text-sm font-medium text-brand-gray">1. Select Machine</label>
-                        <div class="machine-card selected">Filter Tester Machine</div>
-                    </div>
-                    <div>
-                        <label for="customer-select" class="block text-sm font-medium text-brand-gray">2. Select Customer</label>
-                        <select id="customer-select" class="input-field w-full mt-1"></select>
-                    </div>
-                </div>
-                 <p class="text-sm text-center mt-4 text-brand-gray">Don't see the customer? <button id="add-new-customer-btn" class="link-button">Add New</button></p>
-            </div>
             <div id="new-customer-view" class="hidden space-y-4 text-left">
-                 <h4 class="font-semibold text-brand-dark">Add New Customer Details</h4>
-                <input type="text" id="new-customer-name" class="input-field w-full" placeholder="Customer Name">
-                <input type="text" id="new-customer-country" class="input-field w-full" placeholder="Country">
-                <input type="text" id="new-customer-machinetype" class="input-field w-full" placeholder="Machine Type">
-                <input type="text" id="new-customer-serialno" class="input-field w-full" placeholder="Serial No.">
-                <p class="text-sm text-center mt-4 text-brand-gray"><button id="back-to-select-customer-btn" class="link-button">Back to Customer List</button></p>
             </div>
             <div class="mt-8 flex justify-end gap-4">
-                <button id="cancel-start-checklist" class="button-secondary">Cancel</button>
-                <button id="confirm-start-checklist" class="button-primary">Begin Checklist</button>
             </div>
         </div>
     </div>
