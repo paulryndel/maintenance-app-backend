@@ -39,30 +39,107 @@
     <div id="app-container" class="hidden">
         <header class="bg-white sticky top-0 z-20 apple-shadow">
             <div class="container mx-auto p-4 flex justify-between items-center">
-                <span class="font-bold text-lg text-dark">Maintenance App</span>
                 <div class="flex items-center gap-4">
-                    <span id="username-display" class="text-dark font-medium"></span>
-                    <button id="logout-button" class="button-secondary">Log Out</button>
+                    <img id="technicianPhoto" src="" alt="Tech" class="w-10 h-10 rounded-full object-cover bg-gray-200">
+                    <div>
+                        <p class="font-bold text-dark" id="loggedInUserDisplay"></p>
+                        <p class="text-xs text-secondary" id="dateTimeClock"></p>
+                    </div>
                 </div>
+                <button id="logout-button" class="button-secondary">Log Out</button>
             </div>
         </header>
 
         <div id="homepage-view">
              <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-                <!-- Homepage content will be populated by app.js -->
+                <div id="homepage-loader" class="text-center py-20">
+                    <div class="spinner mx-auto"></div>
+                    <p class="mt-4 text-secondary">Loading dashboard...</p>
+                </div>
+                <div id="dashboard-content" class="hidden space-y-8">
+                    <div class="stats-container-blue">
+                        <div class="stat-card-inner">
+                            <p class="stat-title-blue">Customers Visited</p>
+                            <div class="stat-value-box"><span id="customers-visited-stat" class="stat-number-blue">0</span></div>
+                        </div>
+                        <div class="stat-card-inner">
+                            <p class="stat-title-blue">Machines Checked</p>
+                            <div class="stat-value-box"><span id="machines-checked-stat" class="stat-number-blue">0</span></div>
+                        </div>
+                        <div class="stat-card-inner">
+                            <p class="stat-title-blue">Drafts Made</p>
+                            <div class="stat-value-box"><span id="drafts-made-stat" class="stat-number-blue">0</span></div>
+                        </div>
+                    </div>
+                    <div>
+                        <button id="start-new-checklist-btn" class="button-yellow w-full">Start New Checklist</button>
+                    </div>
+                    <div id="drafts-section"></div>
+                    <div id="completed-section"></div>
+                </div>
             </div>
         </div>
 
         <div id="checklist-view" class="hidden">
              <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-                <!-- Checklist content will be populated by app.js -->
+                <div class="bg-white p-6 rounded-2xl apple-shadow">
+                    <div class="flex justify-between items-center pb-4 border-b border-gray-200">
+                        <div>
+                            <h2 class="text-2xl font-bold text-dark">Maintenance Checklist</h2>
+                            <p id="checklist-customer-name" class="text-secondary"></p>
+                        </div>
+                        <button id="back-to-home" class="button-secondary">Back to Home</button>
+                    </div>
+                    <div class="overflow-x-auto mt-6">
+                        <table id="checklistTable" class="min-w-full divide-y divide-gray-200">
+                            <thead class="table-header-sticky">
+                                <tr>
+                                    <th class="px-4 py-3 text-center">#</th>
+                                    <th class="px-6 py-3 text-left">Item Description</th>
+                                    <th class="px-2 py-3 text-center">N</th>
+                                    <th class="px-2 py-3 text-center">A</th>
+                                    <th class="px-2 py-3 text-center">C</th>
+                                    <th class="px-2 py-3 text-center">R</th>
+                                    <th class="px-2 py-3 text-center">I</th>
+                                    <th class="px-6 py-3 text-left">Result</th>
+                                </tr>
+                            </thead>
+                            <tbody id="checklist-body" class="bg-white divide-y divide-gray-200">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-8 flex flex-col sm:flex-row justify-end gap-4">
+                        <button id="save-draft-button" class="button-secondary">Save as Draft</button>
+                        <button id="submit-button" class="button-primary flex items-center justify-center gap-2">
+                            <span id="submitButtonText">Finalize & Submit</span>
+                            <div id="submitSpinner" class="spinner hidden" style="width: 20px; height: 20px; border-width: 2px;"></div>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="start-checklist-modal" class="modal-overlay hidden">
         <div class="modal-content">
-            <!-- Modal content will be populated by app.js -->
+            <h3 class="section-title mb-6">Start a New Checklist</h3>
+            <div id="existing-customer-view">
+                <label for="customer-select" class="block text-sm font-medium text-secondary mb-2">Select an Existing Customer</label>
+                <select id="customer-select" class="input-field w-full"></select>
+                <p class="text-center my-4 text-secondary">OR</p>
+                <button id="add-new-customer-btn" class="button-secondary w-full">Add New Customer</button>
+            </div>
+            <div id="new-customer-view" class="hidden space-y-4 text-left">
+                <input type="text" id="new-customer-name" placeholder="Customer Name" class="input-field">
+                <input type="text" id="new-customer-country" placeholder="Country" class="input-field">
+                <input type="text" id="new-customer-machinetype" placeholder="Machine Type" class="input-field">
+                <input type="text" id="new-customer-serialno" placeholder="Serial No" class="input-field">
+                <button id="back-to-select-customer-btn" class="link-button mt-2">Back to customer list</button>
+            </div>
+            <div class="mt-8 flex justify-end gap-4">
+                <button id="cancel-start-checklist" class="button-secondary">Cancel</button>
+                <button id="confirm-start-checklist" class="button-primary">Confirm & Start</button>
+            </div>
         </div>
     </div>
     <div id="submissionModal" class="modal-overlay hidden">
