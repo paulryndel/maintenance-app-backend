@@ -90,21 +90,24 @@
                         </div>
                         <button id="back-to-home" class="button-secondary w-full sm:w-auto">Back to Home</button>
                     </div>
-                    <div class="mt-6 block w-full overflow-x-auto">
-                        <table id="checklistTable" class="min-w-full divide-y divide-gray-200">
+                    <!-- This container makes the table body scrollable while the header is sticky -->
+                    <div class="mt-6 block w-full overflow-y-auto max-h-[60vh]">
+                        <table id="checklistTable" class="w-full divide-y divide-gray-200 table-fixed">
                             <thead class="table-header-sticky">
                                 <tr>
-                                    <th class="px-2 py-3 text-center">#</th>
-                                    <th class="px-4 sm:px-6 py-3 text-left">Item Description</th>
-                                    <th class="px-2 py-3 text-center">N</th>
-                                    <th class="px-2 py-3 text-center">A</th>
-                                    <th class="px-2 py-3 text-center">C</th>
-                                    <th class="px-2 py-3 text-center">R</th>
-                                    <th class="px-2 py-3 text-center">I</th>
-                                    <th class="px-4 sm:px-6 py-3 text-left">Result</th>
+                                    <th class="w-10 px-2 py-3 text-center">#</th>
+                                    <th class="w-2/5 px-4 sm:px-6 py-3 text-left">Item Description</th>
+                                    <th class="w-10 px-2 py-3 text-center">N</th>
+                                    <th class="w-10 px-2 py-3 text-center">A</th>
+                                    <th class="w-10 px-2 py-3 text-center">C</th>
+                                    <th class="w-10 px-2 py-3 text-center">R</th>
+                                    <th class="w-10 px-2 py-3 text-center">I</th>
+                                    <th class="w-1/4 px-4 sm:px-6 py-3 text-left">Result</th>
                                 </tr>
                             </thead>
                             <tbody id="checklist-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Checklist items will be populated here by app.js -->
+                                <!-- The cells for 'Item Description' and 'Result' will wrap text automatically -->
                             </tbody>
                         </table>
                     </div>
@@ -151,4 +154,3 @@
 
     <script src="app.js"></script>
 </body>
-</html>
