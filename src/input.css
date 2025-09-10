@@ -104,6 +104,6 @@
         @apply sticky left-0 bg-white;
     }
     .checklist-body-cells tr td:nth-child(2) {
-        @apply sticky left-10 bg-white;
+        @apply sticky left-8 bg-white;
     }
 }
