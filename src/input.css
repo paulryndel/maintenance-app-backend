@@ -100,7 +100,10 @@
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
     }
+    .checklist-body-cells tr td:nth-child(1) {
+        @apply sticky left-0 bg-white;
+    }
     .checklist-body-cells tr td:nth-child(2) {
-        @apply line-clamp-2;
+        @apply sticky left-10 bg-white;
     }
 }
