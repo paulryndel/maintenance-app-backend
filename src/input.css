@@ -94,4 +94,10 @@
     .stat-number-blue {
         @apply text-4xl font-extrabold text-primary;
     }
+    .line-clamp-2 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
 }
