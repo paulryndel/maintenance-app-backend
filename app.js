@@ -175,6 +175,8 @@ document.addEventListener('DOMContentLoaded', function() {
             TechnicianID: state.technicianId,
             InspectedDate: new Date().toISOString().split('T')[0],
         };
+        const existingDate = state.activeChecklist.data?.InspectedDate;
+        data.InspectedDate = existingDate || new Date().toISOString().split('T')[0];
         document.querySelectorAll('#checklistTable tbody tr[data-item-id]').forEach(row => {
             const itemId = row.dataset.itemId;
             const selectedAction = row.querySelector(`input[type="radio"]:checked`);
@@ -204,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
             state.currentView = 'homepage';
 
             userDisplay.textContent = state.loggedInTechnician;
-            if (state.photoURL) techPhoto.src = state.photoURL;
+            setTechnicianPhoto(state.loggedInTechnician, state.photoURL);
             
             updateClock();
             clockInterval = setInterval(updateClock, 1000);
@@ -379,6 +381,26 @@ document.addEventListener('DOMContentLoaded', function() {
     function showModal(title, message) {
         modalBody.innerHTML = `<h3 class="text-xl font-bold mb-4">${title}</h3><p class="text-brand-gray">${message}</p>`;
         modal.classList.remove('hidden');
+    }
+    function setTechnicianPhoto(name, url) {
+        if (url) {
+            techPhoto.src = url;
+            techPhoto.alt = name;
+            techPhoto.classList.remove('bg-gray-300');
+            techPhoto.onerror = () => {
+                techPhoto.onerror = null;
+                injectInitial();
+            };
+        } else {
+            injectInitial();
+        }
+        function injectInitial() {
+            techPhoto.removeAttribute('src');
+            techPhoto.alt = name || 'Technician';
+            techPhoto.classList.add('bg-gray-300','flex','items-center','justify-center','text-xs','font-bold','text-dark');
+            techPhoto.style.display = 'flex';
+            techPhoto.textContent = (name || '?').slice(0,1).toUpperCase();
+        }
     }
     const checklistData = [
         { category: 'Pump & Mechanical', items: [
