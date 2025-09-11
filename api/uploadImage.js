@@ -55,7 +55,9 @@ module.exports = async (request, response) => {
         const file = await drive.files.create({
             resource: fileMetadata,
             media: media,
-            fields: 'id, webViewLink', // Get the file ID and link back
+            fields: 'id, webViewLink',
+            // Add this line to enable Shared Drive support
+            supportsAllDrives: true,
         });
 
         // 5. Make the file publicly readable
