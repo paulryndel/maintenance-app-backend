@@ -481,4 +481,27 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCompletionPercent();
       }
     });
+
+    function showToast(type, message, duration = 4000) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      
+      const toast = document.createElement('div');
+      toast.className = `toast ${type} flex items-center p-4 mb-4 text-sm rounded-lg`;
+      
+      // Set different background colors based on type
+      if (type === 'success') toast.classList.add('bg-green-700', 'text-white');
+      else if (type === 'error') toast.classList.add('bg-red-700', 'text-white');
+      else if (type === 'info') toast.classList.add('bg-blue-700', 'text-white');
+      else toast.classList.add('bg-gray-700', 'text-white');
+      
+      toast.innerHTML = `<div class="ml-3 font-medium">${message}</div>`;
+      container.appendChild(toast);
+      
+      // Add animation
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-[-10px]', 'transition-all', 'duration-500');
+        setTimeout(() => toast.remove(), 500);
+      }, duration);
+    }
 });

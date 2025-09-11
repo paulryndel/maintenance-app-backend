@@ -1,5 +1,12 @@
 const { google } = require('googleapis');
 
+const errorHandler = (error, response) => {
+  console.error('API Error:', error);
+  const status = error.status || 500;
+  const message = error.message || 'Internal Server Error';
+  response.status(status).json({ status: 'error', message });
+};
+
 module.exports = async (request, response) => {
     try {
         const { technicianId } = request.query;
@@ -54,7 +61,6 @@ module.exports = async (request, response) => {
         };
         response.status(200).json({ customers, drafts, completed, stats });
     } catch (error) {
-        console.error("API Error:", error);
-        response.status(500).json({ message: 'Failed to fetch homepage data.' });
+        return errorHandler(error, response);
     }
 };

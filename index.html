@@ -90,6 +90,14 @@
                         </div>
                         <button id="back-to-home" class="button-secondary w-full sm:w-auto flex-shrink-0">Back to Home</button>
                     </div>
+                    <div class="mt-4 mb-6">
+                      <div class="flex justify-between items-center text-xs mb-1">
+                        <span id="completion-text" class="font-semibold text-secondary">0% Complete</span>
+                      </div>
+                      <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="completion-bar" class="h-full bg-primary rounded-full w-0 transition-all duration-300"></div>
+                      </div>
+                    </div>
                     <div class="mt-6 block w-full overflow-y-auto overflow-x-auto max-h-[60vh]">
                         <table id="checklistTable" class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
                             <thead class="table-header-sticky">
@@ -150,6 +158,10 @@
         </div>
     </div>
 
+    <div id="offline-indicator" class="fixed bottom-4 left-4 hidden bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg">
+      You are offline. Some features may be unavailable.
+    </div>
+
     <script src="https://polyfill.io/v3/polyfill.min.js?features=fetch%2CPromise%2CArray.prototype.includes"></script>
     <script src="app.js"></script>
     <script>
@@ -158,6 +170,19 @@
           .then(reg => console.log('Service worker registered'))
           .catch(err => console.error('Service worker error:', err));
       }
+
+      // Monitor online/offline status
+      function updateOnlineStatus() {
+        const indicator = document.getElementById('offline-indicator');
+        if (!navigator.onLine) {
+          indicator.classList.remove('hidden');
+        } else {
+          indicator.classList.add('hidden');
+        }
+      }
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
+      updateOnlineStatus(); // Initial check
     </script>
 </body>
 </html>

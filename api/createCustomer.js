@@ -6,6 +6,13 @@ function createCombinedKey(customerData) {
     return combined;
 }
 
+const errorHandler = (error, response) => {
+  console.error('API Error:', error);
+  const status = error.status || 500;
+  const message = error.message || 'Internal Server Error';
+  response.status(status).json({ status: 'error', message });
+};
+
 module.exports = async (request, response) => {
     if (request.method !== 'POST') {
         return response.status(405).send('Method Not Allowed');
@@ -55,7 +62,6 @@ module.exports = async (request, response) => {
         });
         response.status(200).json({ status: 'created', customerID: newCustomerID });
     } catch (error) {
-        console.error('API Error:', error);
-        response.status(500).json({ status: 'error', message: 'Internal Server Error while creating customer.' });
+        return errorHandler(error, response);
     }
 };
