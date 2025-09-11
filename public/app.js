@@ -8,10 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
         activeChecklist: {
             isDraft: false, draftID: null, customerID: null, customerName: null, data: {}
         },
-        isAddingNewCustomer: false
+        isAddingNewCustomer: false,
+        editingPhotoForItem: null // NEW: Track which item we're adding a photo for
     };
     let clockInterval = null;
-    let fabricCanvas = null; // Variable to hold the editor instance
+    let fabricCanvas = null;
 
     // --- DOM ELEMENTS ---
     const views = {
@@ -33,7 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveDraftBtn = document.getElementById('save-draft-button');
     const submitBtn = document.getElementById('submit-button');
     
-    // Start Checklist Modal Elements
     const startChecklistBtn = document.getElementById('start-new-checklist-btn');
     const startChecklistModal = document.getElementById('start-checklist-modal');
     const cancelStartChecklistBtn = document.getElementById('cancel-start-checklist');
@@ -48,20 +48,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalBody = document.getElementById('modal-body');
     const closeModalBtn = document.getElementById('closeModal');
 
-    // Photo upload elements
     const photoInput = document.getElementById('issue-photo');
     const uploadStatus = document.getElementById('upload-status');
     const photoUrlInput = document.getElementById('issue-photo-url');
 
-    // --- Image Editor Elements ---
     const editorModal = document.getElementById('image-editor-modal');
     const editorCanvasEl = document.getElementById('image-editor-canvas');
     const addCircleBtn = document.getElementById('editor-add-circle');
     const addTextBtn = document.getElementById('editor-add-text');
-    const deleteSelectedBtn = document.getElementById('editor-delete-selected'); // New button
+    const deleteSelectedBtn = document.getElementById('editor-delete-selected');
     const clearEditsBtn = document.getElementById('editor-clear');
     const cancelEditorBtn = document.getElementById('editor-cancel');
     const saveAndUploadBtn = document.getElementById('editor-save-upload');
+
+    // NEW: Photo Viewer Modal Elements
+    const photoViewerModal = document.getElementById('photo-viewer-modal');
+    const photoViewerTitle = document.getElementById('photo-viewer-title');
+    const photoViewerBody = document.getElementById('photo-viewer-body');
+    const photoViewerCloseBtn = document.getElementById('photo-viewer-close');
 
 
     // --- RENDER FUNCTIONS ---
@@ -114,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
             completedSection.innerHTML = `<h2 class="section-title">Completed Checklists</h2>`;
             if (state.completed.length > 0) {
                 let completedHTML = `<div class="space-y-2 mt-4">`;
-                 state.completed.slice(0, 5).forEach(item => { // Show last 5
+                 state.completed.slice(0, 5).forEach(item => {
                     completedHTML += `<div class="info-card">
                         <p class="font-bold">${item.CustomerName || 'N/A'}</p>
                         <p class="text-sm text-brand-gray">Completed on: ${new Date(item.InspectedDate).toLocaleDateString()}</p>
@@ -145,32 +149,50 @@ document.addEventListener('DOMContentLoaded', function() {
         let itemNumber = 1;
         checklistData.forEach(section => {
             const categoryClass = section.category === 'Heating System' ? 'heating-section-header' : 'bg-gray-100';
-            checklistBody.innerHTML += `<tr class="${categoryClass}"><td colspan="9" class="px-6 py-3 font-bold text-brand-dark">${section.category}</td></tr>`;
+            checklistBody.innerHTML += `<tr class="${categoryClass}"><td colspan="10" class="px-6 py-3 font-bold text-brand-dark">${section.category}</td></tr>`;
             section.items.forEach(item => {
                 const actionName = `action-row-${itemNumber}`;
-                const savedValue = data[item.id] || '';
-                const [savedAction, ...savedResultParts] = savedValue.split(' - ');
-                const savedResult = savedResultParts.join(' - ');
                 
+                // NEW: Handle both old string data and new object data
+                let savedAction = '', savedResult = '', savedPhotos = [];
+                const itemData = data[item.id];
+                if (typeof itemData === 'object' && itemData !== null) {
+                    savedAction = itemData.status || '';
+                    savedResult = itemData.result || '';
+                    savedPhotos = itemData.photos || [];
+                } else if (typeof itemData === 'string') {
+                    [savedAction, ...savedResultParts] = itemData.split(' - ');
+                    savedResult = savedResultParts.join(' - ');
+                }
+
                 let radioButtonsHTML = ['N', 'A', 'C', 'R', 'I'].map(action => `
                     <td class="text-center py-4">
                         <input type="radio" id="${actionName}-${action}" name="${actionName}" value="${action}" class="input-radio" ${savedAction === action ? 'checked' : ''}>
                     </td>`).join('');
 
+                let photoThumbnailsHTML = savedPhotos.map(url => `
+                    <img src="${url}" alt="thumbnail" class="photo-thumbnail" data-full-url="${url}">
+                `).join('');
+
                 checklistBody.innerHTML += `
-                    <tr class="border-b border-gray-200 hover:bg-gray-50" data-item-id="${item.id}">
+                    <tr class="border-b border-gray-200 hover:bg-gray-50" data-item-id="${item.id}" data-item-text="${item.text}">
                         <td class="px-4 py-4 text-center text-brand-gray">${itemNumber}</td>
                         <td class="px-6 py-4">${item.text}</td>
                         ${radioButtonsHTML}
                         <td class="px-6 py-4">
                             <input type="text" class="input-field result-input w-full" placeholder="Result..." value="${savedResult || ''}">
                         </td>
+                        <td class="px-4 py-4 text-center">
+                            <div class="flex flex-col items-center gap-2">
+                                <button class="add-photo-btn button-secondary text-xs" data-item-id="${item.id}">+ Photo</button>
+                                <div class="photo-thumbnail-container" id="photos-for-${item.id}">${photoThumbnailsHTML}</div>
+                            </div>
+                        </td>
                     </tr>`;
                 itemNumber++;
             });
         });
     }
-
 
     // --- API & DATA FUNCTIONS ---
     async function fetchHomepageData() {
@@ -193,16 +215,25 @@ document.addEventListener('DOMContentLoaded', function() {
             CustomerID: state.activeChecklist.customerID,
             Technician: state.loggedInTechnician,
             TechnicianID: state.technicianId,
-            InspectedDate: new Date().toISOString().split('T')[0],
+            InspectedDate: state.activeChecklist.data?.InspectedDate || new Date().toISOString().split('T')[0],
+            // Keep single photo URL for backward compatibility or general photo
             PhotoURL: document.getElementById('issue-photo-url').value || ''
         };
-        const existingDate = state.activeChecklist.data?.InspectedDate;
-        data.InspectedDate = existingDate || new Date().toISOString().split('T')[0];
+
         document.querySelectorAll('#checklistTable tbody tr[data-item-id]').forEach(row => {
             const itemId = row.dataset.itemId;
             const selectedAction = row.querySelector(`input[type="radio"]:checked`);
             const resultText = row.querySelector('.result-input').value;
-            data[itemId] = selectedAction ? `${selectedAction.value} - ${resultText}` : resultText;
+            
+            // Collect photo URLs for this item
+            const photoURLs = Array.from(row.querySelectorAll('.photo-thumbnail')).map(img => img.dataset.fullUrl);
+
+            // Store as an object
+            data[itemId] = {
+                status: selectedAction ? selectedAction.value : '',
+                result: resultText,
+                photos: photoURLs
+            };
         });
         return data;
     }
@@ -334,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             state.currentView = 'checklist';
             startChecklistModal.classList.add('hidden');
-            render();
+render();
 
         } catch (error) {
             alert(error.message);
@@ -399,11 +430,34 @@ document.addEventListener('DOMContentLoaded', function() {
     
     closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
 
-    // --- IMAGE EDITOR LOGIC (IMPROVED) ---
+    // --- EVENT DELEGATION FOR CHECKLIST ---
+    document.getElementById('checklistTable').addEventListener('click', (e) => {
+        // Handle Add Photo button clicks
+        if (e.target.classList.contains('add-photo-btn')) {
+            state.editingPhotoForItem = e.target.dataset.itemId;
+            photoInput.click(); // Trigger the hidden file input
+        }
+        // Handle thumbnail clicks to open viewer
+        if (e.target.classList.contains('photo-thumbnail')) {
+            const row = e.target.closest('tr');
+            const itemText = row.dataset.itemText;
+            const allThumbnails = row.querySelectorAll('.photo-thumbnail');
+            const photoURLs = Array.from(allThumbnails).map(img => img.dataset.fullUrl);
+            
+            photoViewerTitle.textContent = `Photos for: ${itemText}`;
+            photoViewerBody.innerHTML = photoURLs.map(url => `<img src="${url}" class="w-full h-auto rounded-lg mb-4">`).join('');
+            photoViewerModal.classList.remove('hidden');
+        }
+    });
 
+    photoViewerCloseBtn.addEventListener('click', () => {
+        photoViewerModal.classList.add('hidden');
+    });
+
+    // --- IMAGE EDITOR LOGIC ---
     photoInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
-        if (!file) return;
+        if (!file || !state.editingPhotoForItem) return;
         const reader = new FileReader();
         reader.onload = (f) => initEditor(f.target.result);
         reader.readAsDataURL(file);
@@ -429,12 +483,8 @@ document.addEventListener('DOMContentLoaded', function() {
     addCircleBtn.addEventListener('click', () => {
         if (!fabricCanvas) return;
         const circle = new fabric.Circle({
-            radius: 50,
-            fill: 'transparent',
-            stroke: 'red',
-            strokeWidth: 5,
-            left: fabricCanvas.getCenter().left - 50,
-            top: fabricCanvas.getCenter().top - 50,
+            radius: 50, fill: 'transparent', stroke: 'red', strokeWidth: 5,
+            left: fabricCanvas.getCenter().left - 50, top: fabricCanvas.getCenter().top - 50,
         });
         fabricCanvas.add(circle);
         fabricCanvas.setActiveObject(circle);
@@ -443,11 +493,8 @@ document.addEventListener('DOMContentLoaded', function() {
     addTextBtn.addEventListener('click', () => {
         if (!fabricCanvas) return;
         const text = new fabric.IText('Double-click to edit', {
-            left: fabricCanvas.getCenter().left - 150,
-            top: fabricCanvas.getCenter().top - 20,
-            fill: 'red',
-            fontSize: 40,
-            fontFamily: 'Inter',
+            left: fabricCanvas.getCenter().left - 150, top: fabricCanvas.getCenter().top - 20,
+            fill: 'red', fontSize: 40, fontFamily: 'Inter',
         });
         fabricCanvas.add(text);
         fabricCanvas.setActiveObject(text);
@@ -458,9 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
     deleteSelectedBtn.addEventListener('click', () => {
         if (!fabricCanvas) return;
         const activeObject = fabricCanvas.getActiveObject();
-        if (activeObject) {
-            fabricCanvas.remove(activeObject);
-        }
+        if (activeObject) fabricCanvas.remove(activeObject);
     });
 
     clearEditsBtn.addEventListener('click', () => {
@@ -476,38 +521,38 @@ document.addEventListener('DOMContentLoaded', function() {
             fabricCanvas = null;
         }
         photoInput.value = '';
+        state.editingPhotoForItem = null; // Reset the item being edited
     }
 
     cancelEditorBtn.addEventListener('click', cleanupEditor);
 
     saveAndUploadBtn.addEventListener('click', () => {
-        if (!fabricCanvas) return;
-        fabricCanvas.discardActiveObject().renderAll(); // Deselect any active object
+        if (!fabricCanvas || !state.editingPhotoForItem) return;
+        fabricCanvas.discardActiveObject().renderAll();
 
         fabricCanvas.getElement().toBlob(async (blob) => {
             const editedFile = new File([blob], `edited-photo-${Date.now()}.png`, { type: 'image/png' });
-            
             const formData = new FormData();
             formData.append('image', editedFile);
 
-            uploadStatus.textContent = 'Uploading photo...';
-            uploadStatus.classList.remove('text-green-600', 'text-red-600');
-            uploadStatus.classList.add('text-gray-600');
-            photoUrlInput.value = '';
+            const statusDiv = document.getElementById(`photos-for-${state.editingPhotoForItem}`);
+            statusDiv.innerHTML += `<div id="temp-upload-spinner" class="spinner" style="width: 20px; height: 20px;"></div>`;
 
             try {
                 const response = await fetch('/api/uploadImage', { method: 'POST', body: formData });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.details || result.error || 'Upload failed');
                 
-                uploadStatus.textContent = 'Upload complete!';
-                uploadStatus.classList.add('text-green-600');
-                photoUrlInput.value = result.url;
+                // Add thumbnail to the correct item row
+                const newThumbnail = `<img src="${result.url}" alt="thumbnail" class="photo-thumbnail" data-full-url="${result.url}">`;
+                statusDiv.innerHTML += newThumbnail;
+
             } catch (error) {
                 console.error('Error uploading photo:', error);
-                uploadStatus.textContent = `Error: ${error.message}`;
-                uploadStatus.classList.add('text-red-600');
+                alert(`Error uploading photo: ${error.message}`);
             } finally {
+                const spinner = document.getElementById('temp-upload-spinner');
+                if (spinner) spinner.remove();
                 cleanupEditor();
             }
         }, 'image/png');

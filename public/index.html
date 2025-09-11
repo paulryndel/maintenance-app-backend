@@ -186,8 +186,21 @@
     </div>
     <!-- === NEW IMAGE EDITOR MODAL END === -->
 
+    <!-- === NEW PHOTO VIEWER MODAL START === -->
+    <div id="photo-viewer-modal" class="modal-overlay hidden">
+        <div class="modal-content p-4 sm:p-6 w-full max-w-3xl">
+            <h3 id="photo-viewer-title" class="section-title mb-4">View Photos</h3>
+            <div id="photo-viewer-body" class="flex flex-wrap justify-center gap-4 max-h-[70vh] overflow-y-auto">
+                <!-- Images will be loaded here -->
+            </div>
+            <div class="flex justify-end mt-6">
+                <button id="photo-viewer-close" class="button-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+    <!-- === NEW PHOTO VIEWER MODAL END === -->
+
     <script src="app.js"></script>
-    <!-- Add the Fabric.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 </body>
 </html>
