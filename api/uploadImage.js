@@ -41,9 +41,8 @@ module.exports = async (request, response) => {
         // 3. Prepare file metadata for Google Drive
         const fileMetadata = {
             name: `${Date.now()}-${imageFile.originalFilename}`,
-            // IMPORTANT: For better organization, create a folder in your Google Drive
-            // and put its ID here. e.g., parents: ['YOUR_FOLDER_ID_HERE']
-            parents: ['1UQL31Mfv8-0FYa7trV1h4tXb8RHDqKQv'] // <-- PASTE YOUR FOLDER ID HERE
+            // THIS ID MUST BE FROM A SHARED DRIVE
+            parents: ['0AEDpVAfYMWXCUk9PVA'] 
         };
 
         const media = {
@@ -67,6 +66,8 @@ module.exports = async (request, response) => {
                 role: 'reader',
                 type: 'anyone',
             },
+            // Add this line to support Shared Drives for permissions
+            supportsAllDrives: true,
         });
 
         // 6. Send the public link back to the frontend
