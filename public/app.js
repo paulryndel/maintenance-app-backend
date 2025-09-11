@@ -415,7 +415,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const result = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(result.error || 'Upload failed');
+                    // Pass the detailed error from the server to the Error object
+                    throw new Error(result.details || result.error || 'Upload failed');
                 }
 
                 uploadStatus.textContent = 'Upload complete!';

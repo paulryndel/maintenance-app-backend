@@ -43,7 +43,7 @@ module.exports = async (request, response) => {
             name: `${Date.now()}-${imageFile.originalFilename}`,
             // IMPORTANT: For better organization, create a folder in your Google Drive
             // and put its ID here. e.g., parents: ['YOUR_FOLDER_ID_HERE']
-            parents: ['1a2b3c4d5e6f7g8h9i0j-KlMnOpQrStU'] // <-- PASTE YOUR FOLDER ID HERE
+            parents: ['1UQL31Mfv8-0FYa7trV1h4tXb8RHDqKQv'] // <-- PASTE YOUR FOLDER ID HERE
         };
 
         const media = {
@@ -75,6 +75,13 @@ module.exports = async (request, response) => {
 
     } catch (error) {
         console.error('Error uploading to Google Drive:', error);
-        response.status(500).json({ error: 'A server error occurred during file upload.', details: error.message });
+        // Send a more detailed error message back to the client for debugging
+        response.status(500).json({ 
+            error: 'A server error occurred during file upload.', 
+            // Include details from the actual error object
+            details: error.message,
+            // Include the error code if it's a Google API error
+            code: error.code 
+        });
     }
 };
