@@ -53,11 +53,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadStatus = document.getElementById('upload-status');
     const photoUrlInput = document.getElementById('issue-photo-url');
 
-    // --- NEW Image Editor Elements ---
+    // --- Image Editor Elements ---
     const editorModal = document.getElementById('image-editor-modal');
     const editorCanvasEl = document.getElementById('image-editor-canvas');
     const addCircleBtn = document.getElementById('editor-add-circle');
     const addTextBtn = document.getElementById('editor-add-text');
+    const deleteSelectedBtn = document.getElementById('editor-delete-selected'); // New button
     const clearEditsBtn = document.getElementById('editor-clear');
     const cancelEditorBtn = document.getElementById('editor-cancel');
     const saveAndUploadBtn = document.getElementById('editor-save-upload');
@@ -132,7 +133,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderChecklistPage() {
         document.getElementById('checklist-customer-name').textContent = state.activeChecklist.customerName;
-        // Reset photo inputs when a new checklist is rendered
         photoInput.value = '';
         photoUrlInput.value = state.activeChecklist.data.PhotoURL || '';
         uploadStatus.textContent = photoUrlInput.value ? 'Photo attached.' : '';
@@ -399,35 +399,29 @@ document.addEventListener('DOMContentLoaded', function() {
     
     closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
 
-    // --- IMAGE EDITOR LOGIC ---
+    // --- IMAGE EDITOR LOGIC (IMPROVED) ---
 
-    // When a file is selected, open the editor instead of uploading
     photoInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
-        reader.onload = (f) => {
-            initEditor(f.target.result);
-        };
+        reader.onload = (f) => initEditor(f.target.result);
         reader.readAsDataURL(file);
     });
 
     function initEditor(imgDataUrl) {
         editorModal.classList.remove('hidden');
-        if (fabricCanvas) {
-            fabricCanvas.dispose();
-        }
+        if (fabricCanvas) fabricCanvas.dispose();
         fabricCanvas = new fabric.Canvas(editorCanvasEl);
 
         fabric.Image.fromURL(imgDataUrl, (img) => {
             const modalContent = editorModal.querySelector('.modal-content');
-            const maxWidth = modalContent.clientWidth - 48; // padding
+            const maxWidth = modalContent.clientWidth - 48;
             const scale = maxWidth / img.width;
             
             fabricCanvas.setWidth(img.width * scale);
             fabricCanvas.setHeight(img.height * scale);
-            img.set({ scaleX: scale, scaleY: scale });
+            img.set({ scaleX: scale, scaleY: scale, selectable: false, evented: false });
             fabricCanvas.setBackgroundImage(img, fabricCanvas.renderAll.bind(fabricCanvas));
         });
     }
@@ -439,50 +433,60 @@ document.addEventListener('DOMContentLoaded', function() {
             fill: 'transparent',
             stroke: 'red',
             strokeWidth: 5,
-            left: 100,
-            top: 100
+            left: fabricCanvas.getCenter().left - 50,
+            top: fabricCanvas.getCenter().top - 50,
         });
         fabricCanvas.add(circle);
+        fabricCanvas.setActiveObject(circle);
     });
 
     addTextBtn.addEventListener('click', () => {
         if (!fabricCanvas) return;
-        const text = new fabric.IText('Add Text Here', {
-            left: 100,
-            top: 150,
+        const text = new fabric.IText('Double-click to edit', {
+            left: fabricCanvas.getCenter().left - 150,
+            top: fabricCanvas.getCenter().top - 20,
             fill: 'red',
             fontSize: 40,
-            fontFamily: 'Inter'
+            fontFamily: 'Inter',
         });
         fabricCanvas.add(text);
+        fabricCanvas.setActiveObject(text);
+        text.enterEditing();
+        text.selectAll();
+    });
+
+    deleteSelectedBtn.addEventListener('click', () => {
+        if (!fabricCanvas) return;
+        const activeObject = fabricCanvas.getActiveObject();
+        if (activeObject) {
+            fabricCanvas.remove(activeObject);
+        }
     });
 
     clearEditsBtn.addEventListener('click', () => {
         if (!fabricCanvas) return;
-        const objects = fabricCanvas.getObjects();
-        // Don't remove the background image
-        for (let i = objects.length - 1; i >= 0; i--) {
-            fabricCanvas.remove(objects[i]);
-        }
+        const objects = fabricCanvas.getObjects().filter(obj => obj !== fabricCanvas.backgroundImage);
+        objects.forEach(obj => fabricCanvas.remove(obj));
     });
 
-    cancelEditorBtn.addEventListener('click', () => {
+    function cleanupEditor() {
         editorModal.classList.add('hidden');
         if (fabricCanvas) {
             fabricCanvas.dispose();
             fabricCanvas = null;
         }
-        photoInput.value = ''; // Reset file input
-    });
+        photoInput.value = '';
+    }
+
+    cancelEditorBtn.addEventListener('click', cleanupEditor);
 
     saveAndUploadBtn.addEventListener('click', () => {
         if (!fabricCanvas) return;
+        fabricCanvas.discardActiveObject().renderAll(); // Deselect any active object
 
-        // Convert canvas to a Blob
         fabricCanvas.getElement().toBlob(async (blob) => {
             const editedFile = new File([blob], `edited-photo-${Date.now()}.png`, { type: 'image/png' });
             
-            // Now, use the upload logic
             const formData = new FormData();
             formData.append('image', editedFile);
 
@@ -492,14 +496,10 @@ document.addEventListener('DOMContentLoaded', function() {
             photoUrlInput.value = '';
 
             try {
-                const response = await fetch('/api/uploadImage', {
-                    method: 'POST',
-                    body: formData,
-                });
+                const response = await fetch('/api/uploadImage', { method: 'POST', body: formData });
                 const result = await response.json();
-                if (!response.ok) {
-                    throw new Error(result.details || result.error || 'Upload failed');
-                }
+                if (!response.ok) throw new Error(result.details || result.error || 'Upload failed');
+                
                 uploadStatus.textContent = 'Upload complete!';
                 uploadStatus.classList.add('text-green-600');
                 photoUrlInput.value = result.url;
@@ -508,16 +508,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 uploadStatus.textContent = `Error: ${error.message}`;
                 uploadStatus.classList.add('text-red-600');
             } finally {
-                // Hide and clean up the editor
-                editorModal.classList.add('hidden');
-                if (fabricCanvas) {
-                    fabricCanvas.dispose();
-                    fabricCanvas = null;
-                }
+                cleanupEditor();
             }
         }, 'image/png');
     });
-
 
     // --- UTILITY FUNCTIONS & INITIALIZATION ---
     function updateClock() {
