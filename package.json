@@ -1,17 +1,22 @@
 {
   "name": "maintenance-app",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A preventive maintenance checklist application.",
   "scripts": {
-    "build": "tailwindcss -i ./src/input.css -o ./styles.css --minify",
-    "build:css": "tailwindcss -i ./src/input.css -o ./styles.css --minify",
-    "dev:css": "tailwindcss -i ./src/input.css -o ./styles.css --watch"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tailwindcss -i ./src/input.css -o ./styles.css"
   },
-  "keywords": [],
+  "keywords": [
+    "maintenance",
+    "checklist",
+    "google-sheets"
+  ],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "googleapis": "^126.0.1"
+  },
   "devDependencies": {
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.1"
   }
 }
