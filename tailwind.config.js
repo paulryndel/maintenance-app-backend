@@ -1,6 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./*.{html,js}","./api/**/*.js"],
+  // Change this content path
+  content: [
+    "./public/**/*.{html,js}", // Scan inside the public folder
+    "./api/**/*.js"
+  ],
   theme: {
     extend: {
       colors: {

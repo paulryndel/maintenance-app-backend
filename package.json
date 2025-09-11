@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A preventive maintenance checklist application.",
   "scripts": {
-    "build:css": "tailwindcss -i ./src/input.css -o ./styles.css --minify",
+    "build:css": "tailwindcss -i ./src/input.css -o ./public/styles.css --minify",
     "build": "npm run build:css"
   },
   "keywords": [
