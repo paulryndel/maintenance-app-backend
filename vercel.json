@@ -1,5 +1,8 @@
 {
   "buildCommand": "echo 'Using pre-built assets'",
   "outputDirectory": ".",
-  "framework": null
+  "framework": null,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1.js" }
+  ]
 }

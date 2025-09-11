@@ -1,188 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preventive Maintenance Checklist</title>
-    
-    <link href="/styles.css" rel="stylesheet">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preventive Maintenance Checklist</title>
+  <meta name="description" content="Equipment maintenance checklist application for technicians">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Polyfills for older browsers -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=fetch%2CPromise%2CArray.prototype.includes"></script>
 </head>
 <body class="bg-light text-dark">
 
-    <div id="login-view" class="flex items-center justify-center min-h-screen p-4">
-        <div class="w-full max-w-sm p-6 sm:p-8 space-y-6 bg-white rounded-2xl apple-shadow">
-            <div class="text-center">
-                <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Logo" class="mx-auto h-12 w-auto mb-6">
-                <h2 class="text-2xl font-bold text-dark break-words">Sign in to your account</h2>
-            </div>
-            <form id="login-form" class="mt-6 space-y-6">
-                <div class="rounded-md -space-y-px">
-                    <div>
-                        <label for="username" class="sr-only">Username</label>
-                        <input id="username" name="username" type="text" required class="input-field rounded-t-lg" placeholder="Username">
-                    </div>
-                    <div>
-                        <label for="password" class="sr-only">Password</label>
-                        <input id="password" name="password" type="password" required class="input-field rounded-b-lg" placeholder="Password">
-                    </div>
-                </div>
-                <button type="submit" class="button-primary w-full">Log In</button>
-                <p id="login-error-message" class="text-sm text-center text-red-600 h-4"></p>
-            </form>
-        </div>
-    </div>
+  <!-- LOGIN VIEW -->
+  <section id="login-view" class="min-h-screen flex items-center justify-center">
+    <form id="login-form" class="login-card">
+      <h1 class="text-2xl font-bold mb-4">Technician Login</h1>
+      <label class="block mb-2 text-sm font-semibold">Username
+        <input name="username" type="text" class="input w-full" required />
+      </label>
+      <label class="block mb-2 text-sm font-semibold">Password
+        <input name="password" type="password" class="input w-full" required />
+      </label>
+      <div id="login-error-message" class="text-xs text-red-600 h-4 mb-3"></div>
+      <button type="submit" class="btn-primary w-full">Login</button>
+    </form>
+  </section>
 
-    <div id="app-container" class="hidden">
-        <header class="bg-white sticky top-0 z-20 apple-shadow">
-            <div class="container mx-auto p-4 flex justify-between items-center">
-                <div class="flex items-center gap-3 overflow-hidden">
-                    <img id="technicianPhoto" src="" alt="Tech" class="w-10 h-10 rounded-full object-cover bg-gray-200 flex-shrink-0">
-                    <div class="overflow-hidden">
-                        <p class="font-bold text-dark text-sm sm:text-base truncate" id="loggedInUserDisplay"></p>
-                        <p class="text-xs text-secondary" id="dateTimeClock"></p>
-                    </div>
-                </div>
-                <button id="logout-button" class="button-secondary flex-shrink-0">Log Out</button>
-            </div>
-        </header>
+  <!-- APP CONTAINER -->
+  <div id="app-container" class="hidden">
 
-        <div id="homepage-view">
-             <div class="container mx-auto p-4 sm:p-6">
-                <div id="homepage-loader" class="text-center py-20">
-                    <div class="spinner mx-auto"></div>
-                    <p class="mt-4 text-secondary">Loading dashboard...</p>
-                </div>
-                <div id="dashboard-content" class="hidden space-y-6">
-                    <div class="stats-container-blue">
-                        <div class="stat-card-inner">
-                            <p class="stat-title-blue">Customers Visited</p>
-                            <div class="stat-value-box"><span id="customers-visited-stat" class="stat-number-blue">0</span></div>
-                        </div>
-                        <div class="stat-card-inner">
-                            <p class="stat-title-blue">Machines Checked</p>
-                            <div class="stat-value-box"><span id="machines-checked-stat" class="stat-number-blue">0</span></div>
-                        </div>
-                        <div class="stat-card-inner">
-                            <p class="stat-title-blue">Drafts Made</p>
-                            <div class="stat-value-box"><span id="drafts-made-stat" class="stat-number-blue">0</span></div>
-                        </div>
-                    </div>
-                    <div>
-                        <button id="start-new-checklist-btn" class="button-yellow w-full">Start New Checklist</button>
-                    </div>
-                    <div id="drafts-section"></div>
-                    <div id="completed-section"></div>
-                </div>
-            </div>
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <img id="technicianPhoto" src="" alt="" class="avatar hidden">
+        <span id="loggedInUserDisplay" class="font-semibold text-sm"></span>
+      </div>
+      <div class="flex items-center gap-6">
+        <span id="dateTimeClock" class="clock"></span>
+        <button id="logout-button" class="btn-outline-sm">Logout</button>
+      </div>
+    </header>
+
+    <!-- HOMEPAGE VIEW -->
+    <main id="homepage-view" class="page">
+      <div class="container">
+        <!-- Skeleton -->
+        <div id="homepage-skeleton" class="hidden space-y-4 mb-6">
+          <div class="skeleton h-20 w-full"></div>
+          <div class="skeleton h-32 w-full"></div>
+          <div class="skeleton h-24 w-full"></div>
         </div>
 
-        <div id="checklist-view" class="hidden">
-             <div class="container mx-auto p-4 sm:p-6">
-                <div class="bg-white p-4 sm:p-6 rounded-2xl apple-shadow">
-                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center pb-4 border-b border-gray-200 gap-4">
-                        <div class="overflow-hidden">
-                            <h2 class="text-lg sm:text-2xl font-bold text-dark break-words">Maintenance Checklist</h2>
-                            <p id="checklist-customer-name" class="text-xs sm:text-sm text-secondary break-words"></p>
-                        </div>
-                        <button id="back-to-home" class="button-secondary w-full sm:w-auto flex-shrink-0">Back to Home</button>
-                    </div>
-                    <div class="mt-4 mb-6">
-                      <div class="flex justify-between items-center text-xs mb-1">
-                        <span id="completion-text" class="font-semibold text-secondary">0% Complete</span>
-                      </div>
-                      <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div id="completion-bar" class="h-full bg-primary rounded-full w-0 transition-all duration-300"></div>
-                      </div>
-                    </div>
-                    <div class="mt-6 block w-full overflow-y-auto overflow-x-auto max-h-[60vh]">
-                        <table id="checklistTable" class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
-                            <thead class="table-header-sticky">
-                                <tr>
-                                    <th class="sticky left-0 bg-accent z-10 w-8 px-1 py-3 text-center">#</th>
-                                    <th class="sticky left-8 bg-accent z-10 w-2/5 px-4 sm:px-6 py-3 text-left">Item Description</th>
-                                    <th class="w-10 px-2 py-3 text-center">N</th>
-                                    <th class="w-10 px-2 py-3 text-center">A</th>
-                                    <th class="w-10 px-2 py-3 text-center">C</th>
-                                    <th class="w-10 px-2 py-3 text-center">R</th>
-                                    <th class="w-10 px-2 py-3 text-center">I</th>
-                                    <th class="w-1/4 px-4 sm:px-6 py-3 text-left">Result</th>
-                                </tr>
-                            </thead>
-                            <tbody id="checklist-body" class="bg-white divide-y divide-gray-200 checklist-body-cells">
-                                <!-- Checklist items will be populated here by app.js -->
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="mt-8 flex flex-col sm:flex-row justify-end gap-4">
-                        <button id="save-draft-button" class="button-secondary">Save as Draft</button>
-                        <button id="submit-button" class="button-primary flex items-center justify-center gap-2">
-                            <span id="submitButtonText">Finalize & Submit</span>
-                            <div id="submitSpinner" class="spinner hidden" style="width: 20px; height: 20px; border-width: 2px;"></div>
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <div id="homepage-loader" class="text-center py-20">
+          <div class="spinner mx-auto"></div>
+          <p class="mt-4 text-secondary">Loading dashboard...</p>
         </div>
-    </div>
 
-    <div id="start-checklist-modal" class="modal-overlay hidden">
-        <div class="modal-content p-4 sm:p-6">
-            <h3 class="section-title mb-6">Start a New Checklist</h3>
-            <div id="existing-customer-view">
-                <label for="customer-select" class="block text-sm font-medium text-secondary mb-2">Select an Existing Customer</label>
-                <select id="customer-select" class="input-field w-full"></select>
-                <p class="text-center my-4 text-secondary">OR</p>
-                <button id="add-new-customer-btn" class="button-secondary w-full">Add New Customer</button>
+        <div id="dashboard-content" class="hidden space-y-8">
+          <!-- Stats -->
+          <div class="grid gap-4 grid-cols-1 sm:grid-cols-3">
+            <div class="stat-tile">
+              <p class="label">Customers Visited</p>
+              <p id="customers-visited-stat" class="value">0</p>
             </div>
-            <div id="new-customer-view" class="hidden space-y-4 text-left">
-                <input type="text" id="new-customer-name" placeholder="Customer Name" class="input-field">
-                <input type="text" id="new-customer-country" placeholder="Country" class="input-field">
-                <input type="text" id="new-customer-machinetype" placeholder="Machine Type" class="input-field">
-                <input type="text" id="new-customer-serialno" placeholder="Serial No" class="input-field">
-                <button id="back-to-select-customer-btn" class="link-button mt-2">Back to customer list</button>
+            <div class="stat-tile">
+              <p class="label">Machines Checked</p>
+              <p id="machines-checked-stat" class="value">0</p>
             </div>
-            <div class="mt-8 flex justify-end gap-4">
-                <button id="cancel-start-checklist" class="button-secondary">Cancel</button>
-                <button id="confirm-start-checklist" class="button-primary">Confirm & Start</button>
+            <div class="stat-tile">
+              <p class="label">Drafts Made</p>
+              <p id="drafts-made-stat" class="value">0</p>
             </div>
+          </div>
+
+          <!-- Start Checklist -->
+          <div>
+            <button id="start-new-checklist-btn" class="btn-primary">Start New Checklist</button>
+          </div>
+
+          <section id="drafts-section"></section>
+          <section id="completed-section"></section>
         </div>
-    </div>
-    <div id="submissionModal" class="modal-overlay hidden">
-        <div class="modal-content p-4 sm:p-6">
-             <div id="modal-body"></div>
-             <button id="closeModal" class="button-secondary mt-6">Close</button>
+      </div>
+    </main>
+
+    <!-- CHECKLIST VIEW -->
+    <section id="checklist-view" class="hidden page">
+      <div class="container bg-white rounded-xl shadow p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold">
+            Checklist: <span id="checklist-customer-name" class="text-primary"></span>
+          </h2>
+          <div class="flex gap-2">
+            <button id="back-to-home" class="btn-outline-sm">Back</button>
+            <button id="save-draft-button" class="btn-secondary-sm">Save Draft</button>
+            <button id="submit-button" class="btn-primary-sm flex items-center gap-2">
+              <span id="submitButtonText">Finalize & Submit</span>
+              <span id="submitSpinner" class="spinner spinner-sm hidden"></span>
+            </button>
+          </div>
         </div>
-    </div>
 
-    <div id="offline-indicator" class="fixed bottom-4 left-4 hidden bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg">
-      You are offline. Some features may be unavailable.
-    </div>
+        <!-- Progress bar -->
+        <div class="mt-4 mb-6">
+          <div class="flex justify-between items-center text-xs mb-1">
+            <span id="completion-text" class="font-semibold text-secondary">0% Complete</span>
+          </div>
+          <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div id="completion-bar" class="h-full bg-primary rounded-full w-0 transition-all duration-300"></div>
+          </div>
+        </div>
 
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=fetch%2CPromise%2CArray.prototype.includes"></script>
-    <script src="app.js"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then(reg => console.log('Service worker registered'))
-          .catch(err => console.error('Service worker error:', err));
+        <div class="overflow-x-auto rounded-lg border">
+          <table id="checklistTable" class="w-full text-sm">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="th w-10">#</th>
+                <th class="th text-left">Item</th>
+                <th class="th w-10">N</th>
+                <th class="th w-10">A</th>
+                <th class="th w-10">C</th>
+                <th class="th w-10">R</th>
+                <th class="th w-10">I</th>
+                <th class="th w-40">Result</th>
+              </tr>
+            </thead>
+            <tbody id="checklist-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- START CHECKLIST MODAL -->
+  <div id="start-checklist-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3 class="modal-title">Start New Checklist</h3>
+
+      <div id="existing-customer-view" class="space-y-4">
+        <label class="block text-sm font-semibold">Select Customer
+          <select id="customer-select" class="input w-full"></select>
+        </label>
+        <button id="add-new-customer-btn" class="btn-outline-sm w-full">Add New Customer</button>
+      </div>
+
+      <div id="new-customer-view" class="space-y-3 hidden">
+        <input id="new-customer-name" class="input" placeholder="Customer Name" />
+        <input id="new-customer-country" class="input" placeholder="Country" />
+        <input id="new-customer-machinetype" class="input" placeholder="Machine Type" />
+        <input id="new-customer-serialno" class="input" placeholder="Serial No." />
+        <button id="back-to-select-customer-btn" class="btn-outline-sm w-full">Back to existing</button>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button id="cancel-start-checklist" class="btn-outline-sm flex-1">Cancel</button>
+        <button id="confirm-start-checklist" class="btn-primary-sm flex-1">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMISSION MODAL -->
+  <div id="submissionModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div id="modal-body"></div>
+      <div class="mt-6 text-right">
+        <button id="closeModal" class="btn-outline-sm">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-4 right-4 space-y-3 z-50 pointer-events-none"></div>
+
+  <!-- Offline Indicator -->
+  <div id="offline-indicator" class="fixed bottom-4 left-4 hidden bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg">
+    You are offline. Some features may be unavailable.
+  </div>
+
+  <script>
+    // Register service worker for offline support
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('Service worker registered'))
+        .catch(err => console.error('Service worker error:', err));
+    }
+    
+    // Monitor online/offline status
+    function updateOnlineStatus() {
+      const indicator = document.getElementById('offline-indicator');
+      if (!navigator.onLine) {
+        indicator.classList.remove('hidden');
+      } else {
+        indicator.classList.add('hidden');
       }
-
-      // Monitor online/offline status
-      function updateOnlineStatus() {
-        const indicator = document.getElementById('offline-indicator');
-        if (!navigator.onLine) {
-          indicator.classList.remove('hidden');
-        } else {
-          indicator.classList.add('hidden');
-        }
-      }
-      window.addEventListener('online', updateOnlineStatus);
-      window.addEventListener('offline', updateOnlineStatus);
-      updateOnlineStatus(); // Initial check
-    </script>
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus(); // Initial check
+  </script>
+  
+  <script src="app.js"></script>
 </body>
 </html>

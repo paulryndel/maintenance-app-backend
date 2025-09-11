@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "A preventive maintenance checklist application.",
   "scripts": {
-    "start": "npx http-server -c-1",
-    "dev": "npm run dev:css",
-    "dev:css": "npx tailwindcss -i ./src/input.css -o ./styles.css --watch",
+    "dev": "npx tailwindcss -i ./src/input.css -o ./styles.css --watch",
     "build": "npx tailwindcss -i ./src/input.css -o ./styles.css --minify",
+    "start": "npx http-server -c-1",
     "lint": "eslint ."
   },
   "keywords": [
