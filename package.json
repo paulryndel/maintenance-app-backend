@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "description": "A preventive maintenance checklist application.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx tailwindcss -i ./src/input.css -o ./styles.css"
+    "start": "npx http-server -c-1",
+    "dev": "npm run dev:css",
+    "dev:css": "npx tailwindcss -i ./src/input.css -o ./styles.css --watch",
+    "build": "npx tailwindcss -i ./src/input.css -o ./styles.css --minify",
+    "lint": "eslint ."
   },
   "keywords": [
     "maintenance",
@@ -17,6 +20,8 @@
     "googleapis": "^126.0.1"
   },
   "devDependencies": {
+    "eslint": "^8.56.0",
+    "http-server": "^14.1.1",
     "tailwindcss": "^3.4.1"
   }
 }

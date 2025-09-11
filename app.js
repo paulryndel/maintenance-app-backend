@@ -1,3 +1,21 @@
+window.addEventListener('error', function(e) {
+  const container = document.body;
+  if (container.querySelector('.js-error-alert')) return;
+  
+  const alert = document.createElement('div');
+  alert.className = 'fixed bottom-4 left-4 right-4 bg-red-800 text-white p-4 rounded-lg shadow-lg js-error-alert';
+  alert.innerHTML = `
+    <p class="font-bold">Something went wrong</p>
+    <p class="text-sm">${e.message}</p>
+    <button class="mt-2 px-4 py-1 bg-white text-red-800 rounded text-sm font-medium">Dismiss</button>
+  `;
+  
+  alert.querySelector('button').addEventListener('click', () => alert.remove());
+  container.appendChild(alert);
+  
+  console.error(e);
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // --- STATE MANAGEMENT ---
     let state = {
@@ -206,6 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
             userDisplay.textContent = state.loggedInTechnician;
             if (state.photoURL) techPhoto.src = state.photoURL;
             
+            saveSession(result); // Save session data
             updateClock();
             clockInterval = setInterval(updateClock, 1000);
             render();
@@ -395,5 +414,71 @@ document.addEventListener('DOMContentLoaded', function() {
         ]}
     ];
     
+    // --- SESSION MANAGEMENT ---
+    function saveSession(userData) {
+        localStorage.setItem('maintenanceApp_session', JSON.stringify({
+            technicianId: userData.technicianId,
+            username: userData.username,
+            loggedInAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString() // 8 hour session
+        }));
+    }
+
+    function checkExistingSession() {
+        try {
+            const session = JSON.parse(localStorage.getItem('maintenanceApp_session') || '{}');
+            if (session.technicianId && session.expiresAt && new Date(session.expiresAt) > new Date()) {
+                // Auto-login with saved session
+                state.technicianId = session.technicianId;
+                state.loggedInTechnician = session.username;
+                userDisplay.textContent = session.username;
+                switchView('home');
+                updateClock();
+                clockInterval = setInterval(updateClock, 1000);
+                showToast('info', 'Welcome back');
+                return true;
+            }
+        } catch (e) {
+            console.error("Session restore failed:", e);
+            localStorage.removeItem('maintenanceApp_session');
+        }
+        return false;
+    }
+
+    // --- DARK MODE FUNCTIONS ---
+    function toggleDarkMode() {
+        document.documentElement.classList.toggle('dark');
+        const isDark = document.documentElement.classList.contains('dark');
+        localStorage.setItem('darkMode', isDark ? 'dark' : 'light');
+        showToast('info', `${isDark ? 'Dark' : 'Light'} mode activated`);
+    }
+
+    // Initialize from saved preference
+    function initTheme() {
+        if (localStorage.getItem('darkMode') === 'dark' || 
+            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+    }
+
+    initTheme(); // Call on load
+
     render();
+
+    // In checklist page
+    function updateCompletionPercent() {
+      const items = document.querySelectorAll('tr[data-item-id]');
+      const completed = document.querySelectorAll('input[type="radio"]:checked').length;
+      const percent = Math.floor((completed / items.length) * 100);
+      
+      document.getElementById('completion-bar').style.width = `${percent}%`;
+      document.getElementById('completion-text').textContent = `${percent}% Complete`;
+    }
+
+    // Call after any radio change
+    document.addEventListener('change', function(e) {
+      if (e.target.matches('input[type="radio"]')) {
+        updateCompletionPercent();
+      }
+    });
 });

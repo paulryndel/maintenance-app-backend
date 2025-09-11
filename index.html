@@ -150,6 +150,14 @@
         </div>
     </div>
 
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=fetch%2CPromise%2CArray.prototype.includes"></script>
     <script src="app.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(reg => console.log('Service worker registered'))
+          .catch(err => console.error('Service worker error:', err));
+      }
+    </script>
 </body>
 </html>

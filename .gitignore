@@ -5,5 +5,7 @@ Environment variables
 .env
 .env*.local
 
-Vercel deployment folder
-.vercel
+# Edit .gitignore
+echo ".env" >> .gitignore
+# Verify it's in the file
+cat .gitignore
