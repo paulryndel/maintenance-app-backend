@@ -1,5 +1,15 @@
 const { google } = require('googleapis');
 
+// --- ADD THIS CONFIG BLOCK ---
+module.exports.config = {
+    api: {
+        bodyParser: {
+            sizeLimit: '10mb',
+        },
+    },
+};
+// --- END OF ADDED BLOCK ---
+
 module.exports = async (request, response) => {
     if (request.method !== 'POST') {
         return response.status(405).send('Method Not Allowed');

@@ -227,11 +227,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const photoURLs = Array.from(row.querySelectorAll('.photo-thumbnail')).map(img => img.dataset.fullUrl);
 
-            data[itemId] = {
+            // This is the important change: Stringify the object for each item
+            data[itemId] = JSON.stringify({
                 status: selectedAction ? selectedAction.value : '',
                 result: resultText,
                 photos: photoURLs
-            };
+            });
         });
         return data;
     }
