@@ -109,6 +109,18 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- === NEW PHOTO UPLOAD SECTION START === -->
+                    <div class="mt-6">
+                        <label for="issue-photo" class="block text-sm font-medium text-gray-700">Attach a Photo (Optional)</label>
+                        <div class="mt-1">
+                            <input type="file" id="issue-photo" name="issue-photo" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+                        </div>
+                        <input type="hidden" id="issue-photo-url" name="issue-photo-url">
+                        <div id="upload-status" class="mt-2 text-sm font-medium"></div>
+                    </div>
+                    <!-- === NEW PHOTO UPLOAD SECTION END === -->
+
                     <div class="mt-8 flex flex-col sm:flex-row justify-end gap-4">
                         <button id="save-draft-button" class="button-secondary">Save as Draft</button>
                         <button id="submit-button" class="button-primary flex items-center justify-center gap-2">

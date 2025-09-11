@@ -47,6 +47,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalBody = document.getElementById('modal-body');
     const closeModalBtn = document.getElementById('closeModal');
 
+    // Photo upload elements
+    const photoInput = document.getElementById('issue-photo');
+    const uploadStatus = document.getElementById('upload-status');
+    const photoUrlInput = document.getElementById('issue-photo-url');
+
     // --- RENDER FUNCTIONS ---
     function render() {
         Object.values(views).forEach(v => v.classList.add('hidden'));
@@ -116,6 +121,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderChecklistPage() {
         document.getElementById('checklist-customer-name').textContent = state.activeChecklist.customerName;
+        // Reset photo inputs when a new checklist is rendered
+        photoInput.value = '';
+        photoUrlInput.value = state.activeChecklist.data.PhotoURL || '';
+        uploadStatus.textContent = '';
         renderChecklistItems(state.activeChecklist.data);
     }
     
@@ -174,6 +183,8 @@ document.addEventListener('DOMContentLoaded', function() {
             Technician: state.loggedInTechnician,
             TechnicianID: state.technicianId,
             InspectedDate: new Date().toISOString().split('T')[0],
+            // *** ADD THE PHOTO URL HERE ***
+            PhotoURL: document.getElementById('issue-photo-url').value || ''
         };
         const existingDate = state.activeChecklist.data?.InspectedDate;
         data.InspectedDate = existingDate || new Date().toISOString().split('T')[0];
@@ -197,8 +208,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ username: loginForm.username.value, password: loginForm.password.value })
             });
+            if (!res.ok) {
+                // Handle non-JSON error responses
+                const text = await res.text();
+                try {
+                    const json = JSON.parse(text);
+                    throw new Error(json.message || 'Login failed.');
+                } catch (jsonError) {
+                    // The error response was not JSON, show the raw text
+                    throw new Error(text || 'An unknown login error occurred.');
+                }
+            }
             const result = await res.json();
-            if (!res.ok) throw new Error(result.message);
 
             state.loggedInTechnician = result.username;
             state.technicianId = result.technicianId;
@@ -222,6 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
         state = { ...state, loggedInTechnician: null, technicianId: null, photoURL: null, currentView: 'login' };
         clearInterval(clockInterval);
         loginForm.reset();
+        document.getElementById('login-error-message').textContent = '';
         render();
     });
 
@@ -368,6 +390,47 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+
+    if (photoInput) {
+        photoInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            uploadStatus.textContent = 'Uploading photo...';
+            uploadStatus.classList.remove('text-green-600', 'text-red-600');
+            uploadStatus.classList.add('text-gray-600');
+            photoUrlInput.value = '';
+
+            try {
+                const response = await fetch('/api/uploadImage', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Upload failed');
+                }
+
+                uploadStatus.textContent = 'Upload complete!';
+                uploadStatus.classList.add('text-green-600');
+                
+                photoUrlInput.value = result.url;
+                console.log('Photo uploaded successfully:', result.url);
+
+            } catch (error) {
+                console.error('Error uploading photo:', error);
+                uploadStatus.textContent = `Error: ${error.message}`;
+                uploadStatus.classList.add('text-red-600');
+            }
+        });
+    }
 
     // --- UTILITY FUNCTIONS & INITIALIZATION ---
     function updateClock() {
