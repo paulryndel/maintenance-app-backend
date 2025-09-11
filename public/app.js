@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isDraft: false, draftID: null, customerID: null, customerName: null, data: {}
         },
         isAddingNewCustomer: false,
-        editingPhotoForItem: null // NEW: Track which item we're adding a photo for
+        editingPhotoForItem: null
     };
     let clockInterval = null;
     let fabricCanvas = null;
@@ -61,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelEditorBtn = document.getElementById('editor-cancel');
     const saveAndUploadBtn = document.getElementById('editor-save-upload');
 
-    // NEW: Photo Viewer Modal Elements
     const photoViewerModal = document.getElementById('photo-viewer-modal');
     const photoViewerTitle = document.getElementById('photo-viewer-title');
     const photoViewerBody = document.getElementById('photo-viewer-body');
@@ -153,7 +152,6 @@ document.addEventListener('DOMContentLoaded', function() {
             section.items.forEach(item => {
                 const actionName = `action-row-${itemNumber}`;
                 
-                // NEW: Handle both old string data and new object data
                 let savedAction = '', savedResult = '', savedPhotos = [];
                 const itemData = data[item.id];
                 if (typeof itemData === 'object' && itemData !== null) {
@@ -171,7 +169,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     </td>`).join('');
 
                 let photoThumbnailsHTML = savedPhotos.map(url => `
-                    <img src="${url}" alt="thumbnail" class="photo-thumbnail" data-full-url="${url}">
+                    <div class="thumbnail-wrapper">
+                        <img src="${url}" alt="thumbnail" class="photo-thumbnail" data-full-url="${url}">
+                        <button class="delete-photo-btn" data-url-to-delete="${url}">×</button>
+                    </div>
                 `).join('');
 
                 checklistBody.innerHTML += `
@@ -183,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <input type="text" class="input-field result-input w-full" placeholder="Result..." value="${savedResult || ''}">
                         </td>
                         <td class="px-4 py-4 text-center">
-                            <div class="flex flex-col items-center gap-2">
+                            <div class="flex flex-col items-end gap-2">
                                 <button class="add-photo-btn button-secondary text-xs" data-item-id="${item.id}">+ Photo</button>
                                 <div class="photo-thumbnail-container" id="photos-for-${item.id}">${photoThumbnailsHTML}</div>
                             </div>
@@ -216,7 +217,6 @@ document.addEventListener('DOMContentLoaded', function() {
             Technician: state.loggedInTechnician,
             TechnicianID: state.technicianId,
             InspectedDate: state.activeChecklist.data?.InspectedDate || new Date().toISOString().split('T')[0],
-            // Keep single photo URL for backward compatibility or general photo
             PhotoURL: document.getElementById('issue-photo-url').value || ''
         };
 
@@ -225,10 +225,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedAction = row.querySelector(`input[type="radio"]:checked`);
             const resultText = row.querySelector('.result-input').value;
             
-            // Collect photo URLs for this item
             const photoURLs = Array.from(row.querySelectorAll('.photo-thumbnail')).map(img => img.dataset.fullUrl);
 
-            // Store as an object
             data[itemId] = {
                 status: selectedAction ? selectedAction.value : '',
                 result: resultText,
@@ -365,7 +363,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             state.currentView = 'checklist';
             startChecklistModal.classList.add('hidden');
-render();
+            render();
 
         } catch (error) {
             alert(error.message);
@@ -432,21 +430,22 @@ render();
 
     // --- EVENT DELEGATION FOR CHECKLIST ---
     document.getElementById('checklistTable').addEventListener('click', (e) => {
-        // Handle Add Photo button clicks
         if (e.target.classList.contains('add-photo-btn')) {
             state.editingPhotoForItem = e.target.dataset.itemId;
-            photoInput.click(); // Trigger the hidden file input
+            photoInput.click();
         }
-        // Handle thumbnail clicks to open viewer
-        if (e.target.classList.contains('photo-thumbnail')) {
+        else if (e.target.classList.contains('photo-thumbnail')) {
             const row = e.target.closest('tr');
             const itemText = row.dataset.itemText;
             const allThumbnails = row.querySelectorAll('.photo-thumbnail');
             const photoURLs = Array.from(allThumbnails).map(img => img.dataset.fullUrl);
             
             photoViewerTitle.textContent = `Photos for: ${itemText}`;
-            photoViewerBody.innerHTML = photoURLs.map(url => `<img src="${url}" class="w-full h-auto rounded-lg mb-4">`).join('');
+            photoViewerBody.innerHTML = photoURLs.map(url => `<img src="${url}" class="h-auto rounded-lg mb-4">`).join('');
             photoViewerModal.classList.remove('hidden');
+        }
+        else if (e.target.classList.contains('delete-photo-btn')) {
+            e.target.closest('.thumbnail-wrapper').remove();
         }
     });
 
@@ -521,7 +520,7 @@ render();
             fabricCanvas = null;
         }
         photoInput.value = '';
-        state.editingPhotoForItem = null; // Reset the item being edited
+        state.editingPhotoForItem = null;
     }
 
     cancelEditorBtn.addEventListener('click', cleanupEditor);
@@ -536,22 +535,32 @@ render();
             formData.append('image', editedFile);
 
             const statusDiv = document.getElementById(`photos-for-${state.editingPhotoForItem}`);
-            statusDiv.innerHTML += `<div id="temp-upload-spinner" class="spinner" style="width: 20px; height: 20px;"></div>`;
+            const tempSpinnerId = `spinner-${Date.now()}`;
+            statusDiv.innerHTML += `<div id="${tempSpinnerId}" class="spinner" style="width: 48px; height: 48px;"></div>`;
 
             try {
                 const response = await fetch('/api/uploadImage', { method: 'POST', body: formData });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.details || result.error || 'Upload failed');
                 
-                // Add thumbnail to the correct item row
-                const newThumbnail = `<img src="${result.url}" alt="thumbnail" class="photo-thumbnail" data-full-url="${result.url}">`;
-                statusDiv.innerHTML += newThumbnail;
+                const newThumbnailHTML = `
+                    <div class="thumbnail-wrapper">
+                        <img src="${result.url}" alt="thumbnail" class="photo-thumbnail" data-full-url="${result.url}">
+                        <button class="delete-photo-btn" data-url-to-delete="${result.url}">×</button>
+                    </div>`;
+                
+                const tempSpinner = document.getElementById(tempSpinnerId);
+                if (tempSpinner) {
+                    tempSpinner.insertAdjacentHTML('beforebegin', newThumbnailHTML);
+                } else {
+                    statusDiv.innerHTML += newThumbnailHTML;
+                }
 
             } catch (error) {
                 console.error('Error uploading photo:', error);
                 alert(`Error uploading photo: ${error.message}`);
             } finally {
-                const spinner = document.getElementById('temp-upload-spinner');
+                const spinner = document.getElementById(tempSpinnerId);
                 if (spinner) spinner.remove();
                 cleanupEditor();
             }
