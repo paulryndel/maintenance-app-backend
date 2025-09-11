@@ -162,6 +162,30 @@
         </div>
     </div>
 
+    <!-- === NEW IMAGE EDITOR MODAL START === -->
+    <div id="image-editor-modal" class="modal-overlay hidden">
+        <div class="modal-content p-4 sm:p-6 w-full max-w-3xl">
+            <h3 class="section-title mb-4">Edit Photo</h3>
+            <div class="bg-gray-200 mb-4">
+                <!-- The canvas for the editor will go here -->
+                <canvas id="image-editor-canvas"></canvas>
+            </div>
+            <div class="flex flex-wrap items-center gap-4 mb-6">
+                <p class="font-medium">Tools:</p>
+                <button id="editor-add-circle" class="button-secondary text-sm">Add Red Circle</button>
+                <button id="editor-add-text" class="button-secondary text-sm">Add Text</button>
+                <button id="editor-clear" class="button-secondary text-sm text-red-600">Clear Edits</button>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button id="editor-cancel" class="button-secondary">Cancel</button>
+                <button id="editor-save-upload" class="button-primary">Save & Upload</button>
+            </div>
+        </div>
+    </div>
+    <!-- === NEW IMAGE EDITOR MODAL END === -->
+
     <script src="app.js"></script>
+    <!-- Add the Fabric.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 </body>
 </html>
