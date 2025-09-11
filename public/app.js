@@ -384,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(checklistData)
             });
             const result = await res.json();
-            if (!res.ok) throw new Error(result.message);
+            if (!res.ok) throw new Error(result.message || 'Failed to save draft.');
             state.activeChecklist.draftID = result.draftID;
             state.activeChecklist.isDraft = true;
             showModal('Success', 'Your draft has been saved successfully.');
@@ -410,7 +410,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(checklistData)
             });
             const result = await res.json();
-            if (!res.ok) throw new Error(result.message);
+            if (!res.ok) throw new Error(result.message || 'Internal Server Error.');
             showModal('Success', 'Checklist submitted successfully!');
             setTimeout(() => {
                 modal.classList.add('hidden');
@@ -536,7 +536,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const statusDiv = document.getElementById(`photos-for-${state.editingPhotoForItem}`);
             const tempSpinnerId = `spinner-${Date.now()}`;
-            statusDiv.innerHTML += `<div id="${tempSpinnerId}" class="spinner" style="width: 48px; height: 48px;"></div>`;
+            
+            const spinnerWrapper = document.createElement('div');
+            spinnerWrapper.id = tempSpinnerId;
+            spinnerWrapper.className = 'thumbnail-wrapper';
+            spinnerWrapper.innerHTML = `<div class="spinner" style="width: 48px; height: 48px;"></div>`;
+            statusDiv.appendChild(spinnerWrapper);
 
             try {
                 const response = await fetch('/api/uploadImage', { method: 'POST', body: formData });
@@ -551,17 +556,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const tempSpinner = document.getElementById(tempSpinnerId);
                 if (tempSpinner) {
-                    tempSpinner.insertAdjacentHTML('beforebegin', newThumbnailHTML);
-                } else {
-                    statusDiv.innerHTML += newThumbnailHTML;
+                    tempSpinner.outerHTML = newThumbnailHTML;
                 }
 
             } catch (error) {
                 console.error('Error uploading photo:', error);
                 alert(`Error uploading photo: ${error.message}`);
+                const tempSpinner = document.getElementById(tempSpinnerId);
+                if (tempSpinner) tempSpinner.remove();
             } finally {
-                const spinner = document.getElementById(tempSpinnerId);
-                if (spinner) spinner.remove();
                 cleanupEditor();
             }
         }, 'image/png');
