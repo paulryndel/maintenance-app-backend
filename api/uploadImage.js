@@ -57,9 +57,9 @@ module.exports = async (request, response) => {
                 mimeType: uploadedFile.mimetype,
                 body: fileContent,
             },
+            supportsAllDrives: true, // Add this line
         });
 
-        // --- START OF ADDED CODE ---
         // Make the file publicly readable so it can be embedded.
         await drive.permissions.create({
             fileId: file.data.id,
@@ -67,8 +67,8 @@ module.exports = async (request, response) => {
                 role: 'reader',
                 type: 'anyone',
             },
+            supportsAllDrives: true, // And add this line
         });
-        // --- END OF ADDED CODE ---
 
         // Get a direct download URL instead of webViewLink
         const directUrl = `https://drive.google.com/uc?export=view&id=${file.data.id}`;
