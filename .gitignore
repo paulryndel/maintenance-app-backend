@@ -7,3 +7,5 @@ Environment variables
 
 Vercel deployment folder
 .vercel
+
+package-lock.json
