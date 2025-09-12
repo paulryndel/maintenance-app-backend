@@ -256,6 +256,101 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function renderChecklist(checklistData) {
+        const checklistContainer = document.getElementById('checklist-body');
+        checklistContainer.innerHTML = ''; // Clear existing content
+
+        checklistData.items.forEach((item, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'checklist-item mb-4 p-4 rounded-lg bg-white shadow-md';
+
+            // Item header with editable title
+            const itemHeader = document.createElement('div');
+            itemHeader.className = 'flex justify-between items-center';
+            
+            const itemTitle = document.createElement('h3');
+            itemTitle.className = 'text-lg font-semibold';
+            itemTitle.textContent = `Item ${index + 1}: ${item.text}`;
+            
+            const editTitleBtn = document.createElement('button');
+            editTitleBtn.className = 'text-blue-500 hover:underline text-sm';
+            editTitleBtn.textContent = 'Edit Title';
+            editTitleBtn.onclick = () => {
+                const newText = prompt('Enter new item text:', item.text);
+                if (newText !== null) {
+                    item.text = newText;
+                    renderChecklist(checklistData); // Re-render checklist
+                }
+            };
+
+            itemHeader.appendChild(itemTitle);
+            itemHeader.appendChild(editTitleBtn);
+            itemDiv.appendChild(itemHeader);
+
+            // Render actions and results
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'grid grid-cols-5 gap-4 mt-2';
+            
+            ['N', 'A', 'C', 'R', 'I'].forEach(action => {
+                const actionLabel = document.createElement('label');
+                actionLabel.className = 'flex items-center cursor-pointer';
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = `action-${index}`;
+                radio.value = action;
+                radio.checked = (item.action === action);
+                radio.className = 'mr-2';
+                radio.onclick = () => {
+                    item.action = action;
+                    renderChecklist(checklistData); // Re-render checklist
+                };
+
+                const actionText = document.createElement('span');
+                actionText.className = 'text-sm';
+                actionText.textContent = action;
+
+                actionLabel.appendChild(radio);
+                actionLabel.appendChild(actionText);
+                actionsDiv.appendChild(actionLabel);
+            });
+
+            itemDiv.appendChild(actionsDiv);
+
+            // Result input
+            const resultInput = document.createElement('input');
+            resultInput.type = 'text';
+            resultInput.placeholder = 'Enter result...';
+            resultInput.value = item.result || '';
+            resultInput.className = 'mt-2 p-2 border rounded w-full';
+            resultInput.oninput = () => {
+                item.result = resultInput.value;
+            };
+            itemDiv.appendChild(resultInput);
+
+            // Photo upload section
+            if (item.photoUrl) {
+                const thumbnailContainer = document.createElement('div');
+                thumbnailContainer.className = 'mt-2';
+                
+                const thumbnail = document.createElement('img');
+                thumbnail.src = item.photoUrl;
+                thumbnail.alt = 'Checklist photo thumbnail';
+                thumbnail.className = 'w-24 h-24 object-cover rounded-md border'; 
+                
+                const link = document.createElement('a');
+                link.href = item.photoUrl;
+                link.target = '_blank';
+                link.appendChild(thumbnail);
+                
+                thumbnailContainer.appendChild(link);
+                itemDiv.appendChild(thumbnailContainer);
+            }
+
+            checklistContainer.appendChild(itemDiv);
+        });
+    }
+
     // --- API & DATA FUNCTIONS ---
     async function fetchHomepageData() {
         try {
