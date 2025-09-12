@@ -66,6 +66,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const photoViewerBody = document.getElementById('photo-viewer-body');
     const photoViewerCloseBtn = document.getElementById('photo-viewer-close');
 
+    function setTechnicianPhoto(name, photoURL) {
+        if (!techPhoto) return;
+        if (photoURL && photoURL.trim() !== '') {
+            techPhoto.src = photoURL;
+            techPhoto.alt = name || 'Technician';
+            return;
+        }
+        const initials = (name || '?')
+            .split(/\s+/)
+            .map(p => p[0] || '')
+            .join('')
+            .slice(0, 2)
+            .toUpperCase() || '?';
+        techPhoto.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=64748b&color=ffffff&length=2&rounded=true`;
+        techPhoto.alt = initials;
+    }
 
     // --- RENDER FUNCTIONS ---
     function render() {
