@@ -66,6 +66,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const photoViewerBody = document.getElementById('photo-viewer-body');
     const photoViewerCloseBtn = document.getElementById('photo-viewer-close');
 
+    // === ADD THIS: CLOCK + MODAL HELPERS (put near top after DOM element refs) ===
+    function updateClock() {
+        if (!clockDisplay) return;
+        const now = new Date();
+        const dateStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        clockDisplay.textContent = `${dateStr} ${timeStr}`;
+    }
+
+    // Provide a basic showModal implementation if missing
+    if (typeof window.showModal !== 'function') {
+        window.showModal = function(title, message) {
+            const modal = document.getElementById('submissionModal');
+            const body = document.getElementById('modal-body');
+            if (!modal || !body) return alert(`${title}\n${message}`);
+            body.innerHTML = `<h3 class="font-bold mb-2">${title}</h3><p class="text-sm">${message}</p>`;
+            modal.classList.remove('hidden');
+        };
+    }
+    // === END ADDED BLOCK ===
+
     function setTechnicianPhoto(name, photoURL) {
         if (!techPhoto) return;
         if (photoURL && photoURL.trim() !== '') {
