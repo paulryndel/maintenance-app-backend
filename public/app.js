@@ -105,19 +105,34 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- RENDER FUNCTIONS ---
+    async function fetchHomepageData() {
+        try {
+            const resp = await fetch(`/api/getHomepageData?technicianId=${encodeURIComponent(state.technicianId)}`);
+            if (!resp.ok) throw new Error('Failed to load homepage data');
+            const data = await resp.json();
+            state.customers = data.customers || [];
+            state.drafts = data.drafts || [];
+            state.completed = data.completed || [];
+            state.dashboardStats = data.stats || { customersVisited: 0, machinesChecked: 0, draftsMade: 0 };
+        } catch (err) {
+            console.error('fetchHomepageData error:', err);
+            showModal('Error', err.message);
+        }
+    }
+
     function render() {
         Object.values(views).forEach(v => v.classList.add('hidden'));
         if (state.currentView === 'login') {
             views.login.classList.remove('hidden');
-        } else {
-            views.app.classList.remove('hidden');
-            if (state.currentView === 'homepage') {
-                views.homepage.classList.remove('hidden');
-                renderHomepage();
-            } else if (state.currentView === 'checklist') {
-                views.checklist.classList.remove('hidden');
-                renderChecklistPage();
-            }
+            return;
+        }
+        views.app.classList.remove('hidden');
+        if (state.currentView === 'homepage') {
+            renderHomepage();
+            document.getElementById('homepage-view').classList.remove('hidden');
+        } else if (state.currentView === 'checklist') {
+            document.getElementById('checklist-view').classList.remove('hidden');
+            renderChecklistPage();
         }
     }
 
@@ -130,42 +145,51 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('machines-checked-stat').textContent = state.dashboardStats.machinesChecked;
             document.getElementById('drafts-made-stat').textContent = state.dashboardStats.draftsMade;
 
-            let customerOptionsHTML = '<option value="">Choose a customer...</option>';
-            state.customers.forEach(cust => {
-                customerOptionsHTML += `<option value="${cust.CustomerID}" data-name="${cust.CustomerName}">${cust.CustomerName} (${cust.SerialNo})</option>`;
+            // Populate customer select
+            let options = '<option value="">Choose a customer...</option>';
+            state.customers.forEach(c => {
+                options += `<option value="${c.CustomerID}">${c.CustomerName} (${c.MachineType || ''})</option>`;
             });
-            customerSelect.innerHTML = customerOptionsHTML;
+            if (customerSelect) customerSelect.innerHTML = options;
 
-            draftsSection.innerHTML = `<h2 class="section-title">In-Progress Drafts</h2>`;
-            if (state.drafts.length > 0) {
-                let draftsHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">`;
-                state.drafts.forEach(draft => {
-                    draftsHTML += `<div class="info-card cursor-pointer draft-card" data-draft-id='${JSON.stringify(draft)}'>
-                        <p class="font-bold">${draft.CustomerName || 'N/A'}</p>
-                        <p class="text-sm text-brand-gray">Last saved: ${new Date(draft.InspectedDate).toLocaleDateString()}</p>
-                    </div>`;
+            // Drafts
+            let draftsHTML = `<h2 class="section-title mb-3">In-Progress Drafts</h2>`;
+            if (state.drafts.length === 0) {
+                draftsHTML += `<p class="text-sm text-secondary">No drafts yet.</p>`;
+            } else {
+                draftsHTML += `<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">`;
+                state.drafts.forEach((d, i) => {
+                    const cust = d.CustomerName || d.CustomerID || 'Unknown';
+                    const inspected = d.InspectedDate || d.Date || '—';
+                    draftsHTML += `
+                        <div class="draft-card p-4 rounded-xl apple-shadow bg-white cursor-pointer hover:ring-2 hover:ring-primary transition"
+                             data-draft-index="${i}">
+                            <p class="font-semibold text-sm mb-1 truncate">${cust}</p>
+                            <p class="text-xs text-secondary mb-2">Draft ID: ${d.DraftID || 'N/A'}</p>
+                            <p class="text-xs text-secondary">Date: ${inspected}</p>
+                        </div>`;
                 });
                 draftsHTML += `</div>`;
-                draftsSection.innerHTML += draftsHTML;
-            } else {
-                draftsSection.innerHTML += `<p class="text-brand-gray mt-4">No drafts found.</p>`;
             }
+            draftsSection.innerHTML = draftsHTML;
 
-            completedSection.innerHTML = `<h2 class="section-title">Completed Checklists</h2>`;
-            if (state.completed.length > 0) {
-                let completedHTML = `<div class="space-y-2 mt-4">`;
-                 state.completed.slice(0, 5).forEach(item => {
-                    completedHTML += `<div class="info-card">
-                        <p class="font-bold">${item.CustomerName || 'N/A'}</p>
-                        <p class="text-sm text-brand-gray">Completed on: ${new Date(item.InspectedDate).toLocaleDateString()}</p>
-                    </div>`;
+            // Completed
+            let completedHTML = `<h2 class="section-title mb-3">Completed Checklists</h2>`;
+            if (state.completed.length === 0) {
+                completedHTML += `<p class="text-sm text-secondary">No completed checklists yet.</p>`;
+            } else {
+                completedHTML += `<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">`;
+                state.completed.forEach(c => {
+                    completedHTML += `
+                        <div class="p-4 rounded-xl apple-shadow bg-white">
+                            <p class="font-semibold text-sm mb-1 truncate">${c.CustomerName || c.CustomerID || 'Unknown'}</p>
+                            <p class="text-xs text-secondary">${c.InspectedDate || c.Date || '—'}</p>
+                        </div>`;
                 });
                 completedHTML += `</div>`;
-                completedSection.innerHTML += completedHTML;
-            } else {
-                completedSection.innerHTML += `<p class="text-brand-gray mt-4">No completed checklists found.</p>`;
             }
-            
+            completedSection.innerHTML = completedHTML;
+
             homepageLoader.classList.add('hidden');
             dashboardContent.classList.remove('hidden');
         });
@@ -235,16 +259,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- API & DATA FUNCTIONS ---
     async function fetchHomepageData() {
         try {
-            const response = await fetch(`/api/getHomepageData?technicianId=${state.technicianId}`);
-            if (!response.ok) throw new Error('Failed to load dashboard data.');
-            const data = await response.json();
-            state.customers = data.customers;
-            state.drafts = data.drafts;
-            state.completed = data.completed;
-            state.dashboardStats = data.stats;
-        } catch (error) {
-            console.error(error);
-            showModal('Error', error.message);
+            const resp = await fetch(`/api/getHomepageData?technicianId=${encodeURIComponent(state.technicianId)}`);
+            if (!resp.ok) throw new Error('Failed to load homepage data');
+            const data = await resp.json();
+            state.customers = data.customers || [];
+            state.drafts = data.drafts || [];
+            state.completed = data.completed || [];
+            state.dashboardStats = data.stats || { customersVisited: 0, machinesChecked: 0, draftsMade: 0 };
+        } catch (err) {
+            console.error('fetchHomepageData error:', err);
+            showModal('Error', err.message);
         }
     }
 
@@ -323,19 +347,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     dashboardContent.addEventListener('click', (e) => {
-        const draftCard = e.target.closest('.draft-card');
-        if (draftCard) {
-            const draftData = JSON.parse(draftCard.dataset.draftId);
-            state.activeChecklist = {
-                isDraft: true,
-                draftID: draftData.DraftID,
-                customerID: draftData.CustomerID,
-                customerName: draftData.CustomerName,
-                data: draftData
-            };
-            state.currentView = 'checklist';
-            render();
-        }
+        const card = e.target.closest('.draft-card');
+        if (!card) return;
+        const idx = card.getAttribute('data-draft-index');
+        if (idx == null) return;
+        const draftData = state.drafts[Number(idx)];
+        if (!draftData) return;
+        state.activeChecklist = {
+            isDraft: true,
+            draftID: draftData.DraftID || null,
+            customerID: draftData.CustomerID || null,
+            customerName: draftData.CustomerName || draftData.CustomerID || 'Unknown Customer',
+            data: draftData
+        };
+        state.currentView = 'checklist';
+        render();
     });
     
     startChecklistBtn.addEventListener('click', () => {
