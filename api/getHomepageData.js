@@ -26,10 +26,12 @@ module.exports = async (request, response) => {
         }));
         const customerMap = new Map(customers.map(c => [c.CustomerID, c.CustomerName]));
 
+        // Process drafts with its own header and index
         const draftHeader = (draftRes.data.values || [[]])[0];
-        const technicianIdColIndex = draftHeader.indexOf('TechnicianID');
+        const draftTechnicianIdColIndex = draftHeader.indexOf('TechnicianID');
+        
         const drafts = (draftRes.data.values || []).slice(1)
-            .filter(row => row[technicianIdColIndex] === technicianId)
+            .filter(row => row[draftTechnicianIdColIndex] === technicianId)
             .map(row => {
                 let draftObj = {};
                 draftHeader.forEach((header, index) => { draftObj[header] = row[index]; });
@@ -37,11 +39,14 @@ module.exports = async (request, response) => {
                 return draftObj;
             });
 
+        // Process completed with its own header and index
         const completedHeader = (completedRes.data.values || [[]])[0];
+        const completedTechnicianIdColIndex = completedHeader.indexOf('TechnicianID');
+        
         const completed = (completedRes.data.values || []).slice(1)
-            .filter(row => row[technicianIdColIndex] === technicianId)
+            .filter(row => row[completedTechnicianIdColIndex] === technicianId)
             .map(row => {
-                 let itemObj = {};
+                let itemObj = {};
                 completedHeader.forEach((header, index) => { itemObj[header] = row[index]; });
                 itemObj.CustomerName = customerMap.get(itemObj.CustomerID) || 'Unknown Customer';
                 return itemObj;
