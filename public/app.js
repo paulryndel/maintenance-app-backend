@@ -432,21 +432,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- EVENT DELEGATION FOR CHECKLIST ---
     document.getElementById('checklistTable').addEventListener('click', (e) => {
         if (e.target.classList.contains('add-photo-btn')) {
-            state.editingPhotoForItem = e.target.dataset.itemId;
+            state.editingPhotoForItem = e.target.closest('tr').dataset.itemId;
             photoInput.click();
         }
-        else if (e.target.classList.contains('photo-thumbnail')) {
-            const row = e.target.closest('tr');
-            const itemText = row.dataset.itemText;
-            const allThumbnails = row.querySelectorAll('.photo-thumbnail');
-            const photoURLs = Array.from(allThumbnails).map(img => img.dataset.fullUrl);
+        else if (e.target.classList.contains('view-photos-btn')) {
+            const itemId = e.target.closest('tr').dataset.itemId;
+            const itemData = state.activeChecklist.data[itemId] || {};
             
-            photoViewerTitle.textContent = `Photos for: ${itemText}`;
-            photoViewerBody.innerHTML = photoURLs.map(url => `<img src="${url}" class="h-auto rounded-lg mb-4">`).join('');
-            photoViewerModal.classList.remove('hidden');
-        }
-        else if (e.target.classList.contains('delete-photo-btn')) {
-            e.target.closest('.thumbnail-wrapper').remove();
+            if (itemData.photos && itemData.photos.length > 0) {
+                photoViewerTitle.textContent = `Photos for ${itemId.replace(/_/g, ' ')}`;
+                photoViewerBody.innerHTML = '';
+                
+                // Create an image element for each photo
+                itemData.photos.forEach(photoUrl => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.className = 'photo-container';
+                    
+                    const img = document.createElement('img');
+                    img.src = photoUrl;
+                    img.alt = 'Maintenance photo';
+                    img.className = 'max-w-full max-h-64 object-contain';
+                    
+                    imgContainer.appendChild(img);
+                    photoViewerBody.appendChild(imgContainer);
+                });
+                
+                photoViewerModal.classList.remove('hidden');
+            } else {
+                showModal('No Photos', 'There are no photos attached to this item.');
+            }
         }
     });
 
@@ -457,26 +471,46 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- IMAGE EDITOR LOGIC ---
     photoInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
-        if (!file || !state.editingPhotoForItem) return;
+        if (!file || !state.editingPhotoForItem) {
+            return;
+        }
         const reader = new FileReader();
         reader.onload = (f) => initEditor(f.target.result);
         reader.readAsDataURL(file);
     });
 
     function initEditor(imgDataUrl) {
-        editorModal.classList.remove('hidden');
-        if (fabricCanvas) fabricCanvas.dispose();
-        fabricCanvas = new fabric.Canvas(editorCanvasEl);
-
-        fabric.Image.fromURL(imgDataUrl, (img) => {
-            const modalContent = editorModal.querySelector('.modal-content');
-            const maxWidth = modalContent.clientWidth - 48;
-            const scale = maxWidth / img.width;
+        if (!fabricCanvas) {
+            return;
+        }
+        
+        // Clear existing canvas content
+        fabricCanvas.clear();
+        
+        // Create an image object
+        fabric.Image.fromURL(imgDataUrl, function(img) {
+            // Scale image to fit canvas while maintaining aspect ratio
+            const scale = Math.min(
+                editorCanvasEl.width / img.width, 
+                editorCanvasEl.height / img.height
+            );
             
-            fabricCanvas.setWidth(img.width * scale);
-            fabricCanvas.setHeight(img.height * scale);
-            img.set({ scaleX: scale, scaleY: scale, selectable: false, evented: false });
-            fabricCanvas.setBackgroundImage(img, fabricCanvas.renderAll.bind(fabricCanvas));
+            img.scale(scale);
+            
+            // Center the image on canvas
+            img.set({
+                left: editorCanvasEl.width / 2,
+                top: editorCanvasEl.height / 2,
+                originX: 'center',
+                originY: 'center'
+            });
+            
+            fabricCanvas.add(img);
+            fabricCanvas.setBackgroundImage(img);
+            fabricCanvas.renderAll();
+            
+            // Show the editor modal
+            editorModal.classList.remove('hidden');
         });
     }
 
@@ -503,9 +537,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     deleteSelectedBtn.addEventListener('click', () => {
-        if (!fabricCanvas) return;
         const activeObject = fabricCanvas.getActiveObject();
-        if (activeObject) fabricCanvas.remove(activeObject);
+        if (activeObject) {
+            fabricCanvas.remove(activeObject);
+        }
     });
 
     clearEditsBtn.addEventListener('click', () => {
@@ -556,68 +591,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>`;
                 
                 const tempSpinner = document.getElementById(tempSpinnerId);
-                if (tempSpinner) {
-                    tempSpinner.outerHTML = newThumbnailHTML;
+                if (tempSpinner) tempSpinner.replaceWith(newThumbnailHTML);
+                
+                // Update the photo URL in the checklist data
+                const itemId = state.editingPhotoForItem;
+                if (state.activeChecklist.data[itemId]) {
+                    const itemData = state.activeChecklist.data[itemId];
+                    itemData.photos = itemData.photos || [];
+                    itemData.photos.push(result.url);
                 }
 
+                showModal('Success', 'Photo uploaded and added to checklist.');
             } catch (error) {
-                console.error('Error uploading photo:', error);
-                alert(`Error uploading photo: ${error.message}`);
-                const tempSpinner = document.getElementById(tempSpinnerId);
-                if (tempSpinner) tempSpinner.remove();
+                console.error(error);
+                showModal('Error', error.message);
             } finally {
                 cleanupEditor();
             }
         }, 'image/png');
     });
-
-    // --- UTILITY FUNCTIONS & INITIALIZATION ---
-    function updateClock() {
-        const now = new Date();
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        const dateString = now.toLocaleDateString(undefined, options);
-        const timeString = now.toLocaleTimeString();
-        clockDisplay.textContent = `${dateString}, ${timeString}`;
-    }
-
-    function showModal(title, message) {
-        modalBody.innerHTML = `<h3 class="text-xl font-bold mb-4">${title}</h3><p class="text-brand-gray">${message}</p>`;
-        modal.classList.remove('hidden');
-    }
-    function setTechnicianPhoto(name, url) {
-        if (url) {
-            techPhoto.src = url;
-            techPhoto.alt = name;
-            techPhoto.classList.remove('bg-gray-300');
-            techPhoto.onerror = () => {
-                techPhoto.onerror = null;
-                injectInitial();
-            };
-        } else {
-            injectInitial();
-        }
-        function injectInitial() {
-            techPhoto.removeAttribute('src');
-            techPhoto.alt = name || 'Technician';
-            techPhoto.classList.add('bg-gray-300','flex','items-center','justify-center','text-xs','font-bold','text-dark');
-            techPhoto.style.display = 'flex';
-            techPhoto.textContent = (name || '?').slice(0,1).toUpperCase();
-        }
-    }
-    const checklistData = [
-        { category: 'Pump & Mechanical', items: [
-            { text: 'Check the gear pump motor.', id: 'Motor_Check' }, { text: 'Check the oil level of the motor gear.', id: 'Motor_Gear_Oil' }, { text: 'Check the motor gear.', id: 'Motor_Gear_Condition' }, { text: 'Check the packing seal at the gear pump.', id: 'Pump_Seal' }, { text: 'Check for material leakage.', id: 'Material_Leakage' }, { text: 'Check the joint between the pump and drive shaft.', id: 'Shaft_Joint' }, { text: 'Check the gear pump rotation.', id: 'Pump_Rotation' }, { text: 'Check the motor gear mounting.', id: 'Motor_Mounting' }, { text: 'Check the filter screen retainer.', id: 'Filter_Retainer' }, { text: 'Check gear pump cleaning/cleanliness.', id: 'Pump_Cleanliness' }, { text: 'Check the safety pin on the shaft joint.', id: 'Shaft_Safety_Pin' }
-        ]},
-        { category: 'Heating System', items: [
-            { text: 'Check the condition of the heater.', id: 'Heater_Condition' }, { text: 'Check the thermocouple.', id: 'Thermocouple_Check' }, { text: 'Check the temperature controller.', id: 'Temp_Controller' }, { text: 'Check the insulation for heater cables.', id: 'Heater_Cable_Insulation' }, { text: 'Check the heater cable and connection.', id: 'Heater_Cable_Connection' }
-        ]},
-        { category: 'Electrical & Controls', items: [
-            { text: 'Check the inverter of the gear pump motor.', id: 'Motor_Inverter' }, { text: 'Check the closed-loop control for pressure.', id: 'Pressure_Control_Loop' }, { text: 'Check the motor overload circuit breaker.', id: 'Motor_Overload_Breaker' }, { text: 'Check the pressure transducer.', id: 'Pressure_Transducer' }, { text: 'Check the indicator lamps.', id: 'Indicator_Lamps' }, { text: 'Check all switches.', id: 'Switches_Check' }, { text: 'Check the condition of the PC.', id: 'PC_Condition' }
-        ]},
-        { category: 'Alarms & Safety', items: [
-            { text: 'Check the low-temperature alarm.', id: 'Low_Temp_Alarm' }, { text: 'Check the high/low-pressure alarm.', id: 'Pressure_Alarms' }, { text: 'Check the buzzer.', id: 'Buzzer_Check' }, { text: 'Check the emergency stop button.', id: 'Emergency_Stop' }
-        ]}
-    ];
-    
-    render();
 });
