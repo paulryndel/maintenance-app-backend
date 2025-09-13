@@ -12,74 +12,79 @@ module.exports.config = {
 
 module.exports = async (request, response) => {
     if (request.method !== 'POST') {
-        return response.status(405).json({ message: 'Method not allowed' });
+        return response.status(405).send('Method Not Allowed');
     }
 
-    // Parse the incoming form data including file
-    const form = formidable({ multiples: true });
-    
     try {
-        const [fields, files] = await new Promise((resolve, reject) => {
-            form.parse(request, (err, fields, files) => {
-                if (err) reject(err);
-                resolve([fields, files]);
-            });
-        });
-        
-        const uploadedFile = files.file;
-        if (!uploadedFile) {
-            return response.status(400).json({ message: 'No file uploaded' });
-        }
-
-        // Set up Google Drive API
+        // 1. Authenticate with Google
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
                 private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
             },
-            scopes: ['https://www.googleapis.com/auth/drive'],
+            // We need permission to upload files to Google Drive
+            scopes: ['https://www.googleapis.com/auth/drive.file'],
         });
 
         const drive = google.drive({ version: 'v3', auth });
 
-        // Read the file into a buffer
-        const fileContent = fs.readFileSync(uploadedFile.filepath);
+        // 2. Parse the incoming file from the request
+        const form = formidable({});
+        const [fields, files] = await form.parse(request);
 
-        // Upload to Google Drive
+        const imageFile = files.image?.[0];
+
+        if (!imageFile) {
+            return response.status(400).json({ error: 'No image file uploaded.' });
+        }
+
+        // 3. Prepare file metadata for Google Drive
+        const fileMetadata = {
+            name: `${Date.now()}-${imageFile.originalFilename}`,
+            // THIS ID MUST BE FROM A SHARED DRIVE
+            parents: ['0AEDpVAfYMWXCUk9PVA'] 
+        };
+
+        const media = {
+            mimeType: imageFile.mimetype,
+            body: fs.createReadStream(imageFile.filepath),
+        };
+
+        // 4. Upload the file to Google Drive
         const file = await drive.files.create({
-            requestBody: {
-                name: uploadedFile.originalFilename || 'maintenance_photo.jpg',
-                mimeType: uploadedFile.mimetype,
-                // THIS ID MUST BE FROM A SHARED DRIVE
-                parents: ['0AEDpVAfYMWXCUk9PVA'] 
-            },
-            media: {
-                mimeType: uploadedFile.mimetype,
-                body: fileContent,
-            },
-            supportsAllDrives: true, // Add this line
+            resource: fileMetadata,
+            media: media,
+            fields: 'id, webViewLink',
+            // Add this line to enable Shared Drive support
+            supportsAllDrives: true,
         });
 
-        // Make the file publicly readable so it can be embedded.
+        // 5. Make the file publicly readable
         await drive.permissions.create({
             fileId: file.data.id,
             requestBody: {
                 role: 'reader',
                 type: 'anyone',
             },
-            supportsAllDrives: true, // And add this line
+            // Add this line to support Shared Drives for permissions
+            supportsAllDrives: true,
         });
 
-        // Get a direct download URL instead of webViewLink
-        const directUrl = `https://drive.google.com/uc?export=view&id=${file.data.id}`;
-
-        // Send the direct URL back to the frontend
+        // 6. Send the public link back to the frontend
         response.status(200).json({
             message: 'File uploaded successfully',
-            url: directUrl
+            url: file.data.webViewLink,
         });
+
     } catch (error) {
-        console.error('Upload error:', error);
-        response.status(500).json({ message: 'Failed to upload file' });
+        console.error('Error uploading to Google Drive:', error);
+        // Send a more detailed error message back to the client for debugging
+        response.status(500).json({ 
+            error: 'A server error occurred during file upload.', 
+            // Include details from the actual error object
+            details: error.message,
+            // Include the error code if it's a Google API error
+            code: error.code 
+        });
     }
 };
