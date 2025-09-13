@@ -70,8 +70,9 @@ module.exports = async (request, response) => {
             supportsAllDrives: true,
         });
 
-        // 6. Transform the webViewLink to a direct media link and send back
-        const directMediaLink = file.data.webViewLink.replace("view?usp=drivesdk", "preview");
+        // 6. Construct a direct media link using the file ID
+        const fileId = file.data.id;
+        const directMediaLink = `https://drive.google.com/uc?export=view&id=${fileId}`;
 
         response.status(200).json({
             message: 'File uploaded successfully',
