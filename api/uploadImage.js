@@ -74,6 +74,8 @@ module.exports = async (request, response) => {
         const fileId = file.data.id;
         const directMediaLink = `https://drive.google.com/uc?export=view&id=${fileId}`;
 
+        console.log('Generated Direct Media Link:', directMediaLink); // <-- I am adding this line
+
         response.status(200).json({
             message: 'File uploaded successfully',
             url: directMediaLink,
