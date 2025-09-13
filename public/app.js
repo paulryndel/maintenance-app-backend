@@ -549,10 +549,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.details || result.error || 'Upload failed');
                 
+                // Use the new getImage proxy endpoint
+                const imageUrl = `/api/getImage?fileId=${result.fileId}`;
+
                 const newThumbnailHTML = `
                     <div class="thumbnail-wrapper">
-                        <img src="${result.url}" alt="thumbnail" class="photo-thumbnail" data-full-url="${result.url}">
-                        <button class="delete-photo-btn" data-url-to-delete="${result.url}">×</button>
+                        <img src="${imageUrl}" alt="thumbnail" class="photo-thumbnail w-24 h-24 object-cover rounded-md border" data-full-url="${imageUrl}">
+                        <button class="delete-photo-btn" data-url-to-delete="${result.fileId}">×</button>
                     </div>`;
                 
                 const tempSpinner = document.getElementById(tempSpinnerId);

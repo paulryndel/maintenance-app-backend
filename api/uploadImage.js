@@ -70,15 +70,10 @@ module.exports = async (request, response) => {
             supportsAllDrives: true,
         });
 
-        // 6. Construct a direct media link using the file ID
-        const fileId = file.data.id;
-        const directMediaLink = `https://drive.google.com/uc?export=view&id=${fileId}`;
-
-        console.log('Generated Direct Media Link:', directMediaLink); // <-- I am adding this line
-
+        // 6. Send the file ID back to the frontend
         response.status(200).json({
             message: 'File uploaded successfully',
-            url: directMediaLink,
+            fileId: file.data.id,
         });
 
     } catch (error) {
