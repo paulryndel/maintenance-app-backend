@@ -70,10 +70,12 @@ module.exports = async (request, response) => {
             supportsAllDrives: true,
         });
 
-        // 6. Send the public link back to the frontend
+        // 6. Transform the webViewLink to a direct media link and send back
+        const directMediaLink = file.data.webViewLink.replace("view?usp=drivesdk", "preview");
+
         response.status(200).json({
             message: 'File uploaded successfully',
-            url: file.data.webViewLink,
+            url: directMediaLink,
         });
 
     } catch (error) {
