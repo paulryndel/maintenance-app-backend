@@ -33,7 +33,10 @@ module.exports = async (request, response) => {
             .map(row => {
                 let draftObj = {};
                 draftHeader.forEach((header, index) => { draftObj[header] = row[index]; });
-                draftObj.CustomerName = customerMap.get(draftObj.CustomerID) || 'Unknown Customer';
+                const customer = customers.find(c => c.CustomerID === draftObj.CustomerID);
+                draftObj.CustomerName = customer ? customer.CustomerName : 'Unknown Customer';
+                draftObj.MachineType = customer ? customer.MachineType : 'N/A';
+                draftObj.SerialNo = customer ? customer.SerialNo : 'N/A';
                 return draftObj;
             });
 

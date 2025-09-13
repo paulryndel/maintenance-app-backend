@@ -161,7 +161,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (typeof itemData === 'object' && itemData !== null) {
                             savedAction = itemData.status || '';
                             savedResult = itemData.result || '';
-                            savedPhotos = (itemData.photos || []).map(fileId => `/api/getImage?fileId=${fileId}`);
+                            if (itemData.photos) {
+                                savedPhotos = itemData.photos.map(photo => {
+                                    if (photo.includes('drive.google.com')) {
+                                        const fileId = new URL(photo).searchParams.get('id');
+                                        return `/api/getImage?fileId=${fileId}`;
+                                    }
+                                    return photo;
+                                });
+                            }
                         }
                     } catch (e) {
                         console.error(`Error parsing data for item ${item.id}:`, data[item.id], e);
@@ -309,6 +317,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    function updateImageSrc(src) {
+        if (src.includes('drive.google.com')) {
+            const fileId = new URL(src).searchParams.get('id');
+            return `/api/getImage?fileId=${fileId}`;
+        }
+        return src;
+    }
+
     startChecklistBtn.addEventListener('click', () => {
         state.isAddingNewCustomer = false;
         existingCustomerView.classList.remove('hidden');
