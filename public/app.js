@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 let photoThumbnailsHTML = savedPhotos.map(url => `
                     <div class="thumbnail-wrapper">
-                        <img src="${url}" alt="thumbnail" class="photo-thumbnail w-24 h-24 object-cover rounded-md border" data-full-url="${url}">
+                        <img src="${url}" alt="thumbnail" class="photo-thumbnail w-24 h-24 object-cover rounded-md border" data-full-url="${url}" referrerpolicy="no-referrer">
                         <button class="delete-photo-btn" data-url-to-delete="${url}">×</button>
                     </div>
                 `).join('');
