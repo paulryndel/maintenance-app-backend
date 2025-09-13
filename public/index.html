@@ -74,8 +74,14 @@
                     <div>
                         <button id="start-new-checklist-btn" class="button-yellow w-full">Start New Checklist</button>
                     </div>
-                    <div id="drafts-section"></div>
-                    <div id="completed-section"></div>
+                    <!-- Tabs Navigation -->
+                    <div id="tab-navigation" class="flex border-b mb-4">
+                        <button class="tab-btn active" data-tab="drafts">Drafts</button>
+                        <button class="tab-btn" data-tab="completed">Completed</button>
+                    </div>
+                    <!-- Tabs Content -->
+                    <div id="drafts-section" class="tab-pane active"></div>
+                    <div id="completed-section" class="tab-pane"></div>
                 </div>
             </div>
         </div>
