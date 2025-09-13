@@ -105,7 +105,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 state.drafts.forEach(draft => {
                     draftsHTML += `<div class="info-card cursor-pointer draft-card" data-draft-id='${JSON.stringify(draft)}'>
                         <p class="font-bold">${draft.CustomerName || 'N/A'}</p>
-                        <p class="text-sm text-brand-gray">Last saved: ${new Date(draft.InspectedDate).toLocaleDateString()}</p>
+                        <p class="text-sm text-brand-gray">Model: ${draft.MachineType || 'N/A'}</p>
+                        <p class="text-sm text-brand-gray">Serial: ${draft.SerialNo || 'N/A'}</p>
+                        <p class="text-xs text-brand-gray mt-2">Last saved: ${new Date(draft.InspectedDate).toLocaleDateString()}</p>
                     </div>`;
                 });
                 draftsHTML += `</div>`;
@@ -153,14 +155,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 const actionName = `action-row-${itemNumber}`;
                 
                 let savedAction = '', savedResult = '', savedPhotos = [];
-                const itemData = data[item.id];
-                if (typeof itemData === 'object' && itemData !== null) {
-                    savedAction = itemData.status || '';
-                    savedResult = itemData.result || '';
-                    savedPhotos = itemData.photos || [];
-                } else if (typeof itemData === 'string') {
-                    [savedAction, ...savedResultParts] = itemData.split(' - ');
-                    savedResult = savedResultParts.join(' - ');
+                if (data[item.id]) {
+                    try {
+                        const itemData = JSON.parse(data[item.id]);
+                        if (typeof itemData === 'object' && itemData !== null) {
+                            savedAction = itemData.status || '';
+                            savedResult = itemData.result || '';
+                            savedPhotos = (itemData.photos || []).map(fileId => `/api/getImage?fileId=${fileId}`);
+                        }
+                    } catch (e) {
+                        console.error(`Error parsing data for item ${item.id}:`, data[item.id], e);
+                        // Fallback for old string format if necessary
+                        [savedAction, ...savedResultParts] = String(data[item.id]).split(' - ');
+                        savedResult = savedResultParts.join(' - ');
+                    }
                 }
 
                 let radioButtonsHTML = ['N', 'A', 'C', 'R', 'I'].map(action => `
