@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         checklist: document.getElementById('checklist-view'),
     };
     const loginForm = document.getElementById('login-form');
-    const logoutButton = document.getElementById('logout-button');
+    const backHomeButton = document.getElementById('back-home-button');
     const userDisplay = document.getElementById('loggedInUserDisplay');
     const techPhoto = document.getElementById('technicianPhoto');
     const clockDisplay = document.getElementById('dateTimeClock');
@@ -110,6 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderHomepage();
         });
     }
+    }
 
     function filterItems(items) {
         if (!searchQuery) return items;
@@ -123,13 +124,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderHomepage() {
+        // Always show counters, even during loading
+        document.getElementById('customers-visited-stat').textContent = state.dashboardStats.customersVisited;
+        document.getElementById('machines-checked-stat').textContent = state.dashboardStats.machinesChecked;
+        document.getElementById('drafts-made-stat').textContent = state.dashboardStats.draftsMade;
+
         homepageLoader.classList.remove('hidden');
         dashboardContent.classList.add('hidden');
 
         fetchHomepageData().then(() => {
-            document.getElementById('customers-visited-stat').textContent = state.dashboardStats.customersVisited;
-            document.getElementById('machines-checked-stat').textContent = state.dashboardStats.machinesChecked;
-            document.getElementById('drafts-made-stat').textContent = state.dashboardStats.draftsMade;
+            // Counters already set above, so don't hide them
+            dashboardContent.classList.remove('hidden');
+            homepageLoader.classList.add('hidden');
 
             let customerOptionsHTML = '<option value="">Choose a customer...</option>';
             state.customers.forEach(cust => {
@@ -142,8 +148,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const filteredCompleted = filterItems(state.completed);
 
             draftsSection.innerHTML = `<h2 class="section-title">In-Progress Drafts</h2>`;
+            let draftsHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">`;
             if (filteredDrafts.length > 0) {
-                let draftsHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">`;
                 filteredDrafts.forEach(draft => {
                     draftsHTML += `<div class="info-card cursor-pointer draft-card" data-draft-id='${JSON.stringify(draft)}'>
                         <p class="font-bold">${draft.CustomerName || 'N/A'}</p>
@@ -152,15 +158,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p class="text-xs text-brand-gray mt-2">Last saved: ${new Date(draft.InspectedDate).toLocaleDateString()}</p>
                     </div>`;
                 });
-                draftsHTML += `</div>`;
-                draftsSection.innerHTML += draftsHTML;
             } else {
-                draftsSection.innerHTML += `<p class="text-brand-gray mt-4">No drafts found.</p>`;
+                draftsHTML += `<p class="text-brand-gray mt-4">No drafts found.</p>`;
             }
+            draftsHTML += `</div>`;
+            draftsSection.innerHTML += draftsHTML;
 
             completedSection.innerHTML = `<h2 class="section-title">Completed Checklists</h2>`;
+            let completedHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">`;
             if (filteredCompleted.length > 0) {
-                let completedHTML = `<div class="space-y-2 mt-4">`;
                 filteredCompleted.forEach(item => {
                     completedHTML += `<div class="info-card">
                         <p class="font-bold">${item.CustomerName || 'N/A'}</p>
@@ -168,16 +174,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button class="button-secondary export-pdf-btn mt-2" data-checklist-id="${item.ChecklistID}">Export PDF</button>
                     </div>`;
                 });
-                completedHTML += `</div>`;
-                completedSection.innerHTML += completedHTML;
             } else {
-                completedSection.innerHTML += `<p class="text-brand-gray mt-4">No completed checklists found.</p>`;
+                completedHTML += `<p class="text-brand-gray mt-4">No completed checklists found.</p>`;
             }
-    // --- EXPORT PDF LOGIC ---
-    document.addEventListener('click', async function(e) {
-        if (e.target.classList.contains('export-pdf-btn')) {
-            const checklistId = e.target.getAttribute('data-checklist-id');
-            e.target.disabled = true;
+            completedHTML += `</div>`;
+            completedSection.innerHTML += completedHTML;
+        });
             e.target.textContent = 'Exporting...';
             try {
                 // Find the checklist data from state.completed using ChecklistID
@@ -383,13 +385,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    logoutButton.addEventListener('click', () => {
-        state = { ...state, loggedInTechnician: null, technicianId: null, photoURL: null, currentView: 'login' };
-        clearInterval(clockInterval);
-        loginForm.reset();
-        document.getElementById('login-error-message').textContent = '';
-        render();
-    });
+    if (backHomeButton) {
+        backHomeButton.addEventListener('click', () => {
+            state.currentView = 'homepage';
+            render();
+        });
+    }
 
     dashboardContent.addEventListener('click', (e) => {
         const draftCard = e.target.closest('.draft-card');
