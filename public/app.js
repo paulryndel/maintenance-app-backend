@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutButton = document.getElementById('logout-button');
     const userDisplay = document.getElementById('loggedInUserDisplay');
     const techPhoto = document.getElementById('technicianPhoto');
+    const footerTechnicianPhoto = document.getElementById('footerTechnicianPhoto');
     const clockDisplay = document.getElementById('dateTimeClock');
     const homepageLoader = document.getElementById('homepage-loader');
     const dashboardContent = document.getElementById('dashboard-content');
@@ -639,24 +640,14 @@ document.addEventListener('DOMContentLoaded', function() {
         modalBody.innerHTML = `<h3 class="text-xl font-bold mb-4">${title}</h3><p class="text-brand-gray">${message}</p>`;
         modal.classList.remove('hidden');
     }
-    function setTechnicianPhoto(name, url) {
-        if (url) {
-            techPhoto.src = url;
-            techPhoto.alt = name;
-            techPhoto.classList.remove('bg-gray-300');
-            techPhoto.onerror = () => {
-                techPhoto.onerror = null;
-                injectInitial();
-            };
-        } else {
-            injectInitial();
-        }
-        function injectInitial() {
-            techPhoto.removeAttribute('src');
-            techPhoto.alt = name || 'Technician';
-            techPhoto.classList.add('bg-gray-300','flex','items-center','justify-center','text-xs','font-bold','text-dark');
-            techPhoto.style.display = 'flex';
-            techPhoto.textContent = (name || '?').slice(0,1).toUpperCase();
+    function setTechnicianPhoto(name, photoURL) {
+        if (footerTechnicianPhoto) {
+            if (photoURL) {
+                footerTechnicianPhoto.src = photoURL;
+            } else {
+                footerTechnicianPhoto.src = 'https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg'; // fallback image
+            }
+            footerTechnicianPhoto.alt = name || 'Technician';
         }
     }
     const checklistData = [
