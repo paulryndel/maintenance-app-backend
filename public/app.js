@@ -349,12 +349,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const draftCard = e.target.closest('.draft-card');
         if (draftCard) {
             const draftData = JSON.parse(draftCard.dataset.draftId);
+            // If previous code worked, maybe it used Object.assign to flatten the draft data
             state.activeChecklist = {
                 isDraft: true,
                 draftID: draftData.DraftID,
                 customerID: draftData.CustomerID,
                 customerName: draftData.CustomerName,
-                data: draftData
+                data: { ...draftData }
             };
             state.currentView = 'checklist';
             render();

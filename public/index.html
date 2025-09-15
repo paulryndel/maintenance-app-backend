@@ -37,29 +37,41 @@
     </div>
 
     <div id="app-container" class="hidden">
-        <header class="bg-white sticky top-0 z-20 apple-shadow">
+        <div class="sticky top-0 z-30 bg-white apple-shadow">
             <div class="container mx-auto p-4 flex flex-col gap-2">
                 <!-- Homepage header row: logo + search bar -->
                 <div id="homepage-header-row" class="flex justify-between items-center mb-2" style="display:none;">
                     <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Engineering Logo" class="h-8 w-auto rounded-lg shadow-sm" style="object-fit:contain;">
                     <input id="search-bar" type="text" placeholder="Search customer, model, or serial..." class="input-field w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary ml-4" />
                 </div>
-                <!-- Other header row: user info + logout -->
-                <div id="other-header-row" class="flex justify-between items-center mb-2">
-                    <div class="flex items-center gap-3 overflow-hidden">
-                        <div class="overflow-hidden">
-                            <p class="font-bold text-dark text-sm sm:text-base truncate" id="loggedInUserDisplay"></p>
-                            <p class="text-xs text-secondary" id="dateTimeClock"></p>
-                        </div>
+                <div class="flex gap-4 justify-center mt-2 mb-4">
+                    <div class="flex flex-col items-center bg-white rounded-xl shadow-md px-3 py-2 w-24">
+                        <span class="mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75M8 3.13a4 4 0 010 7.75" /></svg>
+                        </span>
+                        <span class="text-xs text-secondary">Customers</span>
+                        <span id="customers-visited-stat" class="font-bold text-lg text-primary">0</span>
                     </div>
-                    <button id="back-home-button" class="button-secondary flex-shrink-0" title="Back to Home">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7m-9 2v8m4-8v8m5-8h2a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2h2" />
-                        </svg>
-                    </button>
+                    <div class="flex flex-col items-center bg-white rounded-xl shadow-md px-3 py-2 w-24">
+                        <span class="mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6-6m2 2a2.828 2.828 0 11-4-4 2.828 2.828 0 014 4z" /></svg>
+                        </span>
+                        <span class="text-xs text-secondary">Machines</span>
+                        <span id="machines-checked-stat" class="font-bold text-lg text-accent">0</span>
+                    </div>
+                    <div class="flex flex-col items-center bg-white rounded-xl shadow-md px-3 py-2 w-24">
+                        <span class="mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-brand-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-8-4h8M4 6h16M4 6v12a2 2 0 002 2h12a2 2 0 002-2V6" /></svg>
+                        </span>
+                        <span class="text-xs text-secondary">Drafts</span>
+                        <span id="drafts-made-stat" class="font-bold text-lg text-brand-gray">0</span>
+                    </div>
+                </div>
+                <div>
+                    <button id="start-new-checklist-btn" class="button-yellow w-full">Start New Checklist</button>
                 </div>
             </div>
-        </header>
+        </div>
 
         <div id="homepage-view">
              <div class="container mx-auto p-4 sm:p-6">
