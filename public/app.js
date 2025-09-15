@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const mobileTabBar = document.getElementById('mobile-tab-bar');
     const searchBar = document.getElementById('search-bar');
+    const footerTechnicianPhoto = document.getElementById('footerTechnicianPhoto');
     let searchQuery = '';
 
 
@@ -651,7 +652,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         const dateString = now.toLocaleDateString(undefined, options);
         const timeString = now.toLocaleTimeString();
-        clockDisplay.textContent = `${dateString}, ${timeString}`;
+        if (clockDisplay) {
+            clockDisplay.textContent = `${dateString}, ${timeString}`;
+        }
     }
 
     function showModal(title, message) {
