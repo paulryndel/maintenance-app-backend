@@ -380,15 +380,18 @@ document.addEventListener('DOMContentLoaded', function() {
             state.loggedInTechnician = result.username;
             state.technicianId = result.technicianId;
             state.photoURL = result.photoURL;
-            state.currentView = 'homepage';
-
-            if (userDisplay) {
-                userDisplay.textContent = state.loggedInTechnician;
-            }
+            if (userDisplay) userDisplay.textContent = state.loggedInTechnician;
             setTechnicianPhoto(state.loggedInTechnician, state.photoURL);
-            
             updateClock();
             clockInterval = setInterval(updateClock, 1000);
+
+            // PREFETCH dashboard data BEFORE first render so counters show immediately
+            try {
+                await fetchHomepageData();
+            } catch (prefetchErr) {
+                console.warn('[login] Prefetch homepage data failed:', prefetchErr.message);
+            }
+            state.currentView = 'homepage';
             render();
         } catch (err) {
             document.getElementById('login-error-message').textContent = err.message;
