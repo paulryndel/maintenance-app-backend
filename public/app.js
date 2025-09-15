@@ -110,7 +110,6 @@ document.addEventListener('DOMContentLoaded', function() {
             renderHomepage();
         });
     }
-    }
 
     function filterItems(items) {
         if (!searchQuery) return items;
@@ -179,52 +178,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             completedHTML += `</div>`;
             completedSection.innerHTML += completedHTML;
-        });
-            e.target.textContent = 'Exporting...';
-            try {
-                // Find the checklist data from state.completed using ChecklistID
-                const checklist = state.completed.find(c => c.ChecklistID === checklistId);
-                if (!checklist) throw new Error('Checklist not found');
-                // Fetch photos for this checklist (assuming checklist.photos is available)
-                const photos = checklist.photos || [];
-                // Prepare form data
-                const formData = new FormData();
-                formData.append('checklist', JSON.stringify(checklist));
-                // If photos are URLs, fetch and append as blobs
-                for (const photo of photos) {
-                    if (photo.url) {
-                        const resp = await fetch(photo.url);
-                        const blob = await resp.blob();
-                        formData.append('photos', blob, photo.description || 'photo.jpg');
-                    }
-                }
-                // Call exportChecklist API
-                const res = await fetch('/api/exportChecklist', {
-                    method: 'POST',
-                    body: formData
-                });
-                if (!res.ok) throw new Error('Failed to export PDF');
-                const pdfBlob = await res.blob();
-                // Download PDF
-                const url = window.URL.createObjectURL(pdfBlob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Checklist_${checklistId}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(url);
-                e.target.textContent = 'Export PDF';
-                e.target.disabled = false;
-            } catch (err) {
-                e.target.textContent = 'Export PDF';
-                e.target.disabled = false;
-                alert('Failed to export PDF: ' + err.message);
-            }
-        }
-    });
-            homepageLoader.classList.add('hidden');
-            dashboardContent.classList.remove('hidden');
         });
     }
 
