@@ -1,44 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // --- LOGOUT MODAL LOGIC ---
-    const logoutModal = document.getElementById('logoutModal');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const switchAccountBtn = document.getElementById('switchAccountBtn');
-    const closeLogoutModal = document.getElementById('closeLogoutModal');
-
-    if (footerTechnicianPhoto) {
-        footerTechnicianPhoto.addEventListener('click', function() {
-            if (state.currentView === 'homepage') {
-                logoutModal.classList.remove('hidden');
-            }
-        });
-    }
-    if (closeLogoutModal) {
-        closeLogoutModal.addEventListener('click', function() {
-            logoutModal.classList.add('hidden');
-        });
-    }
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
-            logoutModal.classList.add('hidden');
-            // Perform logout
-            state.loggedInTechnician = null;
-            state.technicianId = null;
-            state.photoURL = null;
-            state.currentView = 'login';
-            render();
-        });
-    }
-    if (switchAccountBtn) {
-        switchAccountBtn.addEventListener('click', function() {
-            logoutModal.classList.add('hidden');
-            // Go to login view for another account
-            state.loggedInTechnician = null;
-            state.technicianId = null;
-            state.photoURL = null;
-            state.currentView = 'login';
-            render();
-        });
-    }
     // --- STATE MANAGEMENT ---
     let state = {
         loggedInTechnician: null, technicianId: null, photoURL: null,
@@ -65,7 +25,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutButton = document.getElementById('logout-button');
     const userDisplay = document.getElementById('loggedInUserDisplay');
     const techPhoto = document.getElementById('technicianPhoto');
-    const footerTechnicianPhoto = document.getElementById('footerTechnicianPhoto');
     const clockDisplay = document.getElementById('dateTimeClock');
     const homepageLoader = document.getElementById('homepage-loader');
     const dashboardContent = document.getElementById('dashboard-content');
@@ -74,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const backToHomeBtn = document.getElementById('back-to-home');
     const saveDraftBtn = document.getElementById('save-draft-button');
     const submitBtn = document.getElementById('submit-button');
-    
+    // ...existing code...
     const startChecklistBtn = document.getElementById('start-new-checklist-btn');
     const startChecklistModal = document.getElementById('start-checklist-modal');
     const cancelStartChecklistBtn = document.getElementById('cancel-start-checklist');
