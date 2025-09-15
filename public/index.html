@@ -68,7 +68,7 @@
                     <p class="mt-4 text-secondary">Loading dashboard...</p>
                 </div>
                 <div id="dashboard-content" class="hidden space-y-6">
-                    <div class="flex gap-4 justify-center mt-2 mb-4">
+                    <div class="flex gap-4 justify-center mt-2 mb-4 sticky top-0 z-30 bg-white py-2" style="box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                         <div class="flex flex-col items-center bg-white rounded-xl shadow-md px-3 py-2 w-24">
                             <span class="mb-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75M8 3.13a4 4 0 010 7.75" /></svg>
@@ -91,7 +91,7 @@
                             <span id="drafts-made-stat" class="font-bold text-lg text-brand-gray">0</span>
                         </div>
                     </div>
-                    <div>
+                    <div class="sticky top-20 z-30 bg-white py-2" style="box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                         <button id="start-new-checklist-btn" class="button-yellow w-full">Start New Checklist</button>
                     </div>
                     <div id="drafts-section"></div>
@@ -108,7 +108,7 @@
                             <h2 class="text-lg sm:text-2xl font-bold text-dark break-words">Maintenance Checklist</h2>
                             <p id="checklist-customer-name" class="text-xs sm:text-sm text-secondary break-words"></p>
                         </div>
-                        <button id="back-to-home" class="button-secondary w-full sm:w-auto flex-shrink-0">Back to Home</button>
+                        <!-- Removed Back to Home button text, icon is already present in header -->
                     </div>
                     <div class="mt-6 block w-full overflow-y-auto overflow-x-auto max-h-[60vh]">
                         <table id="checklistTable" class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
