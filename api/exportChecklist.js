@@ -30,14 +30,24 @@ module.exports = async (req, res) => {
                 photos.push({ url: photoPath, description: file.originalFilename });
             }
         }
-        // Generate PDF
-        const pdfPath = path.join('/tmp', `Checklist_${Date.now()}.pdf`);
-        generateChecklistPDF(checklist, photos, pdfPath);
-        // Wait for PDF to finish writing
-        setTimeout(() => {
+        try {
+            const pdfPath = path.join('/tmp', `Checklist_${Date.now()}.pdf`);
+            await generateChecklistPDF(checklist, photos, pdfPath);
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', 'attachment; filename=Checklist.pdf');
-            fs.createReadStream(pdfPath).pipe(res);
-        }, 1000);
+            const stream = fs.createReadStream(pdfPath);
+            stream.on('error', (streamErr) => {
+                console.error('Stream error:', streamErr);
+                if (!res.headersSent) {
+                    res.status(500).json({ status: 'error', message: 'Failed to read generated PDF.' });
+                } else {
+                    res.end();
+                }
+            });
+            stream.pipe(res);
+        } catch (pdfErr) {
+            console.error('PDF generation error:', pdfErr);
+            res.status(500).json({ status: 'error', message: 'PDF generation failed.' });
+        }
     });
 };

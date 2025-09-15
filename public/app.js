@@ -94,6 +94,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hide both header rows by default
         document.getElementById('homepage-header-row').style.display = 'none';
         document.getElementById('other-header-row').style.display = 'none';
+        const statsBar = document.getElementById('homepage-stats-bar');
+        if (statsBar) statsBar.style.display = 'none';
         if (state.currentView === 'login') {
             views.login.classList.remove('hidden');
             if (mobileTabBar) mobileTabBar.classList.add('hidden');
@@ -105,6 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show homepage header row (logo + search)
                 document.getElementById('homepage-header-row').style.display = 'flex';
                 document.getElementById('other-header-row').style.display = 'none';
+                if (statsBar) statsBar.style.display = 'block';
                 renderHomepage();
             } else if (state.currentView === 'checklist') {
                 views.checklist.classList.remove('hidden');
@@ -112,11 +115,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show other header row (user info + logout)
                 document.getElementById('homepage-header-row').style.display = 'none';
                 document.getElementById('other-header-row').style.display = 'flex';
+                if (statsBar) statsBar.style.display = 'none';
                 renderChecklistPage();
             } else {
                 // For any other view, show other header row
                 document.getElementById('homepage-header-row').style.display = 'none';
                 document.getElementById('other-header-row').style.display = 'flex';
+                if (statsBar) statsBar.style.display = 'none';
             }
         }
     }
