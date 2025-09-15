@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     completedHTML += `<div class="info-card">
                         <p class="font-bold">${item.CustomerName || 'N/A'}</p>
                         <p class="text-sm text-brand-gray">Completed on: ${new Date(item.InspectedDate).toLocaleDateString()}</p>
-                        <button class="button-secondary export-pdf-btn mt-2" data-customer-id="${item.CustomerID}" data-inspected-date="${item.InspectedDate}">Export PDF</button>
+                        <button class="button-secondary export-pdf-btn mt-2" data-checklist-id="${item.ChecklistID}">Export PDF</button>
                     </div>`;
                 });
                 completedHTML += `</div>`;
@@ -164,13 +164,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- EXPORT PDF LOGIC ---
     document.addEventListener('click', async function(e) {
         if (e.target.classList.contains('export-pdf-btn')) {
-            const customerId = e.target.getAttribute('data-customer-id');
-            const inspectedDate = e.target.getAttribute('data-inspected-date');
+            const checklistId = e.target.getAttribute('data-checklist-id');
             e.target.disabled = true;
             e.target.textContent = 'Exporting...';
             try {
-                // Find the checklist data from state.completed using CustomerID and InspectedDate
-                const checklist = state.completed.find(c => c.CustomerID === customerId && c.InspectedDate === inspectedDate);
+                // Find the checklist data from state.completed using ChecklistID
+                const checklist = state.completed.find(c => c.ChecklistID === checklistId);
                 if (!checklist) throw new Error('Checklist not found');
                 // Fetch photos for this checklist (assuming checklist.photos is available)
                 const photos = checklist.photos || [];
@@ -196,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const url = window.URL.createObjectURL(pdfBlob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `Checklist_${customerId}_${inspectedDate}.pdf`;
+                a.download = `Checklist_${checklistId}.pdf`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
