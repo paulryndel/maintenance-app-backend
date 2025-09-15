@@ -41,10 +41,11 @@ module.exports = async (request, response) => {
             });
 
         const completedHeader = (completedRes.data.values || [[]])[0];
+        const completedTechnicianIdColIndex = completedHeader.indexOf('TechnicianID');
         const completed = (completedRes.data.values || []).slice(1)
-            .filter(row => row[technicianIdColIndex] === technicianId)
+            .filter(row => row[completedTechnicianIdColIndex] === technicianId)
             .map(row => {
-                 let itemObj = {};
+                let itemObj = {};
                 completedHeader.forEach((header, index) => { itemObj[header] = row[index]; });
                 itemObj.CustomerName = customerMap.get(itemObj.CustomerID) || 'Unknown Customer';
                 return itemObj;
