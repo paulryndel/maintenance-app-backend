@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const dashboardContent = document.getElementById('dashboard-content');
     const draftsSection = document.getElementById('drafts-section');
     const completedSection = document.getElementById('completed-section');
+    // NOTE: legacy id 'back-to-home' no longer exists in HTML; keep reference guarded to avoid runtime crash
     const backToHomeBtn = document.getElementById('back-to-home');
     const saveDraftBtn = document.getElementById('save-draft-button');
     const submitBtn = document.getElementById('submit-button');
@@ -500,7 +501,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    backToHomeBtn.addEventListener('click', () => { state.currentView = 'homepage'; render(); });
+    if (backToHomeBtn) {
+        backToHomeBtn.addEventListener('click', () => { state.currentView = 'homepage'; render(); });
+    } else {
+        console.warn('[UI] Element with id "back-to-home" not found. Using back-home-button only.');
+    }
 
     saveDraftBtn.addEventListener('click', async () => {
         const checklistData = collectChecklistData();
@@ -522,6 +527,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showModal('Success', 'Your draft has been saved successfully.');
         } catch (err) {
             showModal('Error', err.message);
+            console.error('[saveDraftBtn] Error saving draft:', err);
         }
     });
 
@@ -554,6 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } catch (err) {
             showModal('Error', err.message);
+            console.error('[submitBtn] Error submitting checklist:', err);
         } finally {
             submitBtn.disabled = false;
             btnText.textContent = 'Finalize & Submit';
@@ -600,6 +607,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function initEditor(imgDataUrl) {
         editorModal.classList.remove('hidden');
         if (fabricCanvas) fabricCanvas.dispose();
+        if (typeof fabric === 'undefined') {
+            console.error('[image-editor] Fabric.js not loaded.');
+            alert('Image editor library not loaded. Please retry in a moment.');
+            return;
+        }
         fabricCanvas = new fabric.Canvas(editorCanvasEl);
 
         fabric.Image.fromURL(imgDataUrl, (img) => {
@@ -790,6 +802,19 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.disabled = false;
             btn.textContent = originalText;
         }
+    });
+
+    // Global error overlay for easier debugging
+    window.addEventListener('error', (ev) => {
+        console.error('[global-error]', ev.error || ev.message);
+        const existing = document.getElementById('global-error-overlay');
+        if (existing) return;
+        const div = document.createElement('div');
+        div.id = 'global-error-overlay';
+        div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#b91c1c;color:#fff;padding:8px;font-size:12px;z-index:9999;font-family:monospace;';
+        div.textContent = 'JS Error: ' + (ev.error?.message || ev.message);
+        document.body.appendChild(div);
+        setTimeout(()=>{ if(div.parentNode) div.parentNode.removeChild(div); }, 8000);
     });
 
     render();
