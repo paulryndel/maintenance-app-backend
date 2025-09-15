@@ -172,11 +172,12 @@ document.addEventListener('DOMContentLoaded', function() {
             let draftsHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">`;
             if (filteredDrafts.length > 0) {
                 filteredDrafts.forEach(draft => {
+                    const inspectedDate = draft.InspectedDate ? new Date(draft.InspectedDate).toLocaleDateString() : 'N/A';
                     draftsHTML += `<div class="info-card cursor-pointer draft-card" data-draft-id='${JSON.stringify(draft)}'>
                         <p class="font-bold">${draft.CustomerName || 'N/A'}</p>
                         <p class="text-sm text-brand-gray">Model: ${draft.MachineType || 'N/A'}</p>
                         <p class="text-sm text-brand-gray">Serial: ${draft.SerialNo || 'N/A'}</p>
-                        <p class="text-xs text-brand-gray mt-2">Last saved: ${new Date(draft.InspectedDate).toLocaleDateString()}</p>
+                        <p class="text-xs text-brand-gray mt-2">Last saved: ${inspectedDate}</p>
                     </div>`;
                 });
             } else {
@@ -189,9 +190,10 @@ document.addEventListener('DOMContentLoaded', function() {
             let completedHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">`;
             if (filteredCompleted.length > 0) {
                 filteredCompleted.forEach(item => {
+                    const completedDate = item.InspectedDate ? new Date(item.InspectedDate).toLocaleDateString() : 'N/A';
                     completedHTML += `<div class="info-card">
                         <p class="font-bold">${item.CustomerName || 'N/A'}</p>
-                        <p class="text-sm text-brand-gray">Completed on: ${new Date(item.InspectedDate).toLocaleDateString()}</p>
+                        <p class="text-sm text-brand-gray">Completed on: ${completedDate}</p>
                         <button class="button-secondary export-pdf-btn mt-2" data-checklist-id="${item.ChecklistID}">Export PDF</button>
                     </div>`;
                 });
@@ -200,6 +202,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             completedHTML += `</div>`;
             completedSection.innerHTML += completedHTML;
+
+            // Re-apply active tab visibility after rebuilding sections
+            if (typeof activeTab !== 'undefined') {
+                showTab(activeTab);
+            }
         });
     }
 

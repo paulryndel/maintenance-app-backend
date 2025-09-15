@@ -17,6 +17,14 @@ module.exports = async (request, response) => {
     
     try {
         const draftData = request.body;
+        // Ensure required identifiers
+        if (!draftData.CustomerID || !draftData.TechnicianID) {
+            return response.status(400).json({ message: 'Missing CustomerID or TechnicianID.' });
+        }
+        // Provide a default inspected date if not present
+        if (!draftData.InspectedDate) {
+            draftData.InspectedDate = new Date().toISOString().split('T')[0];
+        }
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -31,14 +39,21 @@ module.exports = async (request, response) => {
             range: range,
         });
         const header = sheetData.data.values[0];
+        if (!header || header.length === 0) {
+            return response.status(500).json({ message: 'Drafts sheet header missing.' });
+        }
         const newRow = header.map(col => draftData[col] || '');
 
         if (draftData.DraftID) {
             const rows = sheetData.data.values;
             const draftIdColIndex = header.indexOf('DraftID');
+            if (draftIdColIndex === -1) {
+                return response.status(500).json({ message: 'DraftID column not found in Drafts sheet.' });
+            }
             const rowIndex = rows.findIndex(row => row[draftIdColIndex] === draftData.DraftID);
-            
-            if (rowIndex > 0) {
+            // rowIndex 0 is header; valid data rows start at index 1
+            if (rowIndex >= 1) {
+                console.log(`[saveDraft] Updating draft ${draftData.DraftID} at row ${rowIndex + 1}`);
                 await sheets.spreadsheets.values.update({
                     spreadsheetId: process.env.SPREADSHEET_ID,
                     range: `Drafts!A${rowIndex + 1}`,
@@ -51,6 +66,7 @@ module.exports = async (request, response) => {
         
         const newDraftID = `DRAFT-${Date.now()}`;
         newRow[header.indexOf('DraftID')] = newDraftID;
+        console.log(`[saveDraft] Creating new draft ${newDraftID}`);
 
         await sheets.spreadsheets.values.append({
             spreadsheetId: process.env.SPREADSHEET_ID,

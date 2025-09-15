@@ -51,6 +51,15 @@ module.exports = async (request, response) => {
     }
     try {
         const data = request.body;
+        if (!data.CustomerID || !data.TechnicianID) {
+            return response.status(400).json({ status: 'error', message: 'Missing CustomerID or TechnicianID.' });
+        }
+        if (!data.ChecklistID) {
+            data.ChecklistID = `CHK-${Date.now()}`;
+        }
+        if (!data.InspectedDate) {
+            data.InspectedDate = new Date().toISOString().split('T')[0];
+        }
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -61,10 +70,14 @@ module.exports = async (request, response) => {
         const sheets = google.sheets({ version: 'v4', auth });
         const headerRes = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'FilterTester!A1:AF1',
+            range: 'FilterTester!1:1',
         });
-        const header = headerRes.data.values[0];
+        const header = (headerRes.data.values || [])[0];
+        if (!header) {
+            return response.status(500).json({ status: 'error', message: 'FilterTester header row missing.' });
+        }
         const newRow = header.map(col => data[col] || '');
+        console.log(`[submitChecklist] Appending checklist ${data.ChecklistID} (draft=${data.DraftID ? 'yes' : 'no'}) with ${header.length} columns.`);
 
         await sheets.spreadsheets.values.append({
             spreadsheetId: process.env.SPREADSHEET_ID,
@@ -75,7 +88,7 @@ module.exports = async (request, response) => {
 
         await deleteDraft(sheets, process.env.SPREADSHEET_ID, data.DraftID);
         
-        response.status(200).json({ status: 'success', message: 'Checklist submitted successfully.' });
+        response.status(200).json({ status: 'success', message: 'Checklist submitted successfully.', checklistID: data.ChecklistID });
     } catch (error) {
         console.error('API Error:', error);
         response.status(500).json({ status: 'error', message: 'Internal Server Error.' });
