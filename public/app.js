@@ -646,5 +646,32 @@ document.addEventListener('DOMContentLoaded', function() {
         ]}
     ];
     
+    // --- TAB BAR LOGIC ---
+    const tabDrafts = document.getElementById('tab-drafts');
+    const tabCompleted = document.getElementById('tab-completed');
+    let activeTab = 'drafts';
+
+    function showTab(tab) {
+        activeTab = tab;
+        if (tab === 'drafts') {
+            draftsSection.classList.remove('hidden');
+            completedSection.classList.add('hidden');
+            tabDrafts.classList.add('bg-primary', 'text-white', 'shadow-xl', 'border-t-4', 'border-accent', 'rounded-t-2xl');
+            tabDrafts.classList.remove('text-brand-dark', 'bg-brand-gray', 'text-secondary');
+            tabCompleted.classList.remove('bg-primary', 'text-white', 'shadow-xl', 'border-t-4', 'border-accent', 'rounded-t-2xl');
+            tabCompleted.classList.add('text-brand-dark');
+        } else {
+            draftsSection.classList.add('hidden');
+            completedSection.classList.remove('hidden');
+            tabCompleted.classList.add('bg-primary', 'text-white', 'shadow-xl', 'border-t-4', 'border-accent', 'rounded-t-2xl');
+            tabCompleted.classList.remove('text-brand-dark', 'bg-brand-gray', 'text-secondary');
+            tabDrafts.classList.remove('bg-primary', 'text-white', 'shadow-xl', 'border-t-4', 'border-accent', 'rounded-t-2xl');
+            tabDrafts.classList.add('text-brand-dark');
+        }
+    }
+
+    tabDrafts.addEventListener('click', function() { showTab('drafts'); });
+    tabCompleted.addEventListener('click', function() { showTab('completed'); });
+
     render();
 });

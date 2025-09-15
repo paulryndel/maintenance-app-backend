@@ -202,5 +202,24 @@
 
     <script src="app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    </body>
+
+    <!-- Mobile Tab Bar -->
+    <style>
+        .tab-animate {
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s, border-color 0.3s;
+        }
+    </style>
+    <div id="mobile-tab-bar" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex z-30 shadow-2xl rounded-t-2xl">
+        <button id="tab-drafts" class="flex-1 py-2 flex flex-col items-center justify-center font-semibold focus:outline-none tab-animate text-brand-dark hover:bg-brand-gray">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            <span class="text-xs">Drafts</span>
+        </button>
+        <button id="tab-completed" class="flex-1 py-2 flex flex-col items-center justify-center font-semibold focus:outline-none tab-animate text-brand-dark hover:bg-brand-gray">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2l4-4" /></svg>
+            <span class="text-xs">Completed</span>
+        </button>
+    </div>
+    </body>
 </body>
 </html>
