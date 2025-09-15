@@ -3,6 +3,7 @@ const express = require('express');
 const { google } = require('googleapis');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,23 +18,65 @@ app.use(express.static('public'));
 
 const sheets = google.sheets('v4');
 
+// Sheet name mapping (logical -> actual tab title). Allows adapting to varying sheet tab names.
+// You can override any of these via environment variables, e.g. SHEET_TECHNICIANS=TechnicianDetails
+const SHEET_NAMES = {
+    TECHNICIANS: process.env.SHEET_TECHNICIANS || 'TechnicianDetails',
+    CUSTOMERS: process.env.SHEET_CUSTOMERS || 'CustomerList',
+    DRAFTS: process.env.SHEET_DRAFTS || 'Drafts',
+    COMPLETED: process.env.SHEET_COMPLETED || 'FilterTester'
+};
+
+// Support both naming conventions documented vs implemented previously
+const SERVICE_ACCOUNT_EMAIL = process.env.GCP_CLIENT_EMAIL || process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+let SERVICE_ACCOUNT_KEY = process.env.GCP_PRIVATE_KEY || process.env.GOOGLE_PRIVATE_KEY || '';
+if (SERVICE_ACCOUNT_KEY) {
+    // Replace escaped newlines only if present
+    SERVICE_ACCOUNT_KEY = SERVICE_ACCOUNT_KEY.replace(/\\n/g, '\n');
+}
+
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
+function assertEnv() {
+    const missing = [];
+    if (!SPREADSHEET_ID) missing.push('SPREADSHEET_ID');
+    if (!SERVICE_ACCOUNT_EMAIL) missing.push('GCP_CLIENT_EMAIL or GOOGLE_SERVICE_ACCOUNT_EMAIL');
+    if (!SERVICE_ACCOUNT_KEY) missing.push('GCP_PRIVATE_KEY or GOOGLE_PRIVATE_KEY');
+    if (missing.length) {
+        console.error('[CONFIG] Missing required environment variables:', missing.join(', '));
+    }
+}
+assertEnv();
+
 async function getAuthClient() {
+    if (!SERVICE_ACCOUNT_EMAIL || !SERVICE_ACCOUNT_KEY) {
+        throw new Error('Service account credentials not configured.');
+    }
     const auth = new google.auth.GoogleAuth({
         credentials: {
-            client_email: process.env.GCP_CLIENT_EMAIL,
-            private_key: process.env.GCP_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            client_email: SERVICE_ACCOUNT_EMAIL,
+            private_key: SERVICE_ACCOUNT_KEY,
         },
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
     return await auth.getClient();
 }
 
+// Helper to retrieve sheetId by title for dimension operations (e.g., deleting rows)
+async function getSheetIdByTitle(auth, title) {
+    const meta = await sheets.spreadsheets.get({ auth, spreadsheetId: SPREADSHEET_ID });
+    const sheet = meta.data.sheets.find(s => s.properties.title === title);
+    return sheet ? sheet.properties.sheetId : undefined;
+}
+
 // Multer setup for image uploads
+// Ensure uploads directory exists (Note: On platforms like Vercel this is ephemeral per invocation)
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+try { fs.mkdirSync(uploadsDir, { recursive: true }); } catch (e) {/* ignore */}
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'public/uploads/');
+        cb(null, uploadsDir);
     },
     filename: function (req, file, cb) {
         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
@@ -57,7 +100,7 @@ app.post('/api/login', async (req, res) => {
         const response = await sheets.spreadsheets.values.get({
             auth,
             spreadsheetId: SPREADSHEET_ID,
-            range: 'Technicians!A:D',
+            range: `${SHEET_NAMES.TECHNICIANS}!A:D`,
         });
         const rows = response.data.values;
         const user = rows.find(row => row[1] === username && row[2] === password);
@@ -84,9 +127,9 @@ app.get('/api/getHomepageData', async (req, res) => {
     try {
         const auth = await getAuthClient();
         const [customersRes, draftsRes, completedRes] = await Promise.all([
-            sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: 'Customers' }),
-            sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: 'Drafts' }),
-            sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: 'Completed' })
+            sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: SHEET_NAMES.CUSTOMERS }),
+            sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: SHEET_NAMES.DRAFTS }),
+            sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: SHEET_NAMES.COMPLETED })
         ]);
 
         const customerHeaders = customersRes.data.values[0];
@@ -141,11 +184,11 @@ app.post('/api/createCustomer', async (req, res) => {
     }
     try {
         const auth = await getAuthClient();
-        const response = await sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: 'Customers!A:A' });
+    const response = await sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAMES.CUSTOMERS}!A:A` });
         const newID = `CUST${1000 + (response.data.values ? response.data.values.length : 0)}`;
         
         await sheets.spreadsheets.values.append({
-            auth, spreadsheetId: SPREADSHEET_ID, range: 'Customers!A1', valueInputOption: 'USER_ENTERED',
+            auth, spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAMES.CUSTOMERS}!A1`, valueInputOption: 'USER_ENTERED',
             resource: { values: [[newID, CustomerName, Country, MachineType, SerialNo]] }
         });
         res.status(201).json({ message: 'Customer created', customerID: newID });
@@ -155,67 +198,99 @@ app.post('/api/createCustomer', async (req, res) => {
     }
 });
 
-async function saveOrSubmit(sheetName, data, res) {
+async function saveOrSubmit(logicalSheetName, data, res) {
     try {
+        // Resolve actual sheet tab name
+        const sheetName = logicalSheetName === 'Drafts' ? SHEET_NAMES.DRAFTS : (logicalSheetName === 'Completed' ? SHEET_NAMES.COMPLETED : logicalSheetName);
         const auth = await getAuthClient();
         const response = await sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: `${sheetName}!A1:AZ1` });
         const headers = response.data.values[0];
 
-        // Stringify any object values (like our new item data with photos)
+        if (!headers || !Array.isArray(headers)) {
+            throw new Error(`Header row not found for sheet ${sheetName}`);
+        }
+
+        // Stringify any object/array values (e.g., nested JSON, photo arrays)
         Object.keys(data).forEach(key => {
             if (typeof data[key] === 'object' && data[key] !== null) {
-                data[key] = JSON.stringify(data[key]);
+                try {
+                    data[key] = JSON.stringify(data[key]);
+                } catch (e) { /* ignore stringify error */ }
             }
         });
-        
-        const values = [headers.map(header => data[header] || '')];
 
-        if (sheetName === 'Drafts' && data.DraftID) {
-            // Find and update existing draft
-            const draftsRes = await sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: 'Drafts' });
+        const values = [headers.map(header => (data[header] !== undefined ? data[header] : ''))];
+
+        if (logicalSheetName === 'Drafts' && data.DraftID) {
+            // Update existing draft row if present
+            const draftsRes = await sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: SHEET_NAMES.DRAFTS });
             const draftIDIndex = draftsRes.data.values[0].indexOf('DraftID');
-            const rowIndex = draftsRes.data.values.findIndex(row => row[draftIDIndex] === data.DraftID);
-
-            if (rowIndex > 0) {
+            const rowIndex = draftsRes.data.values.findIndex(row => row[draftIDIndex] === data.DraftID); // 0-based (header = 0)
+            if (rowIndex > 0) { // skip header row
                 await sheets.spreadsheets.values.update({
-                    auth, spreadsheetId: SPREADSHEET_ID, range: `${sheetName}!A${rowIndex + 1}`, valueInputOption: 'USER_ENTERED',
+                    auth,
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `${SHEET_NAMES.DRAFTS}!A${rowIndex + 1}`, // 1-based row number
+                    valueInputOption: 'USER_ENTERED',
                     resource: { values }
                 });
                 return res.json({ message: 'Draft updated successfully', draftID: data.DraftID });
             }
         }
-        
-        // If it's a new draft, add a DraftID
-        if (sheetName === 'Drafts' && !data.DraftID) {
-            const draftsRes = await sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: 'Drafts!A:A' });
+
+        if (logicalSheetName === 'Drafts' && !data.DraftID) {
+            // Create new DraftID
+            const draftsRes = await sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAMES.DRAFTS}!A:A` });
             const newDraftID = `DRAFT${1000 + (draftsRes.data.values ? draftsRes.data.values.length : 0)}`;
-            values[0][headers.indexOf('DraftID')] = newDraftID;
-            data.DraftID = newDraftID;
+            const draftIdCol = headers.indexOf('DraftID');
+            if (draftIdCol !== -1) {
+                values[0][draftIdCol] = newDraftID;
+                data.DraftID = newDraftID;
+            }
         }
 
-        // If submitting, delete from drafts if it exists
-        if (sheetName === 'Completed' && data.DraftID) {
-             const draftsRes = await sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: 'Drafts' });
-             const draftIDIndex = draftsRes.data.values[0].indexOf('DraftID');
-             const rowIndex = draftsRes.data.values.findIndex(row => row[draftIDIndex] === data.DraftID);
-             if (rowIndex > 0) {
-                 await sheets.spreadsheets.batchUpdate({
-                     auth, spreadsheetId: SPREADSHEET_ID,
-                     resource: { requests: [{ deleteDimension: { range: { sheetId: draftsRes.data.values[0].sheetId || 125283533, dimension: 'ROWS', startIndex: rowIndex, endIndex: rowIndex + 1 } } }] }
-                 });
-             }
+        if (logicalSheetName === 'Completed' && data.DraftID) {
+            // Delete original draft row after successful submission
+            const draftsRes = await sheets.spreadsheets.values.get({ auth, spreadsheetId: SPREADSHEET_ID, range: SHEET_NAMES.DRAFTS });
+            const draftIDIndex = draftsRes.data.values[0].indexOf('DraftID');
+            const rowIndex = draftsRes.data.values.findIndex(row => row[draftIDIndex] === data.DraftID); // 0-based
+            if (rowIndex > 0) {
+                const draftSheetId = await getSheetIdByTitle(auth, SHEET_NAMES.DRAFTS);
+                if (draftSheetId !== undefined) {
+                    await sheets.spreadsheets.batchUpdate({
+                        auth,
+                        spreadsheetId: SPREADSHEET_ID,
+                        resource: {
+                            requests: [{
+                                deleteDimension: {
+                                    range: { sheetId: draftSheetId, dimension: 'ROWS', startIndex: rowIndex, endIndex: rowIndex + 1 }
+                                }
+                            }]
+                        }
+                    });
+                }
+            }
         }
 
         await sheets.spreadsheets.values.append({
-            auth, spreadsheetId: SPREADSHEET_ID, range: `${sheetName}!A1`, valueInputOption: 'USER_ENTERED',
+            auth,
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${sheetName}!A1`,
+            valueInputOption: 'USER_ENTERED',
             resource: { values }
         });
 
-        res.status(201).json({ message: `${sheetName.slice(0, -1)} saved successfully`, draftID: data.DraftID });
-
+        res.status(201).json({ message: `${logicalSheetName === 'Drafts' ? 'Draft' : 'Checklist'} saved successfully`, draftID: data.DraftID });
     } catch (error) {
-        console.error(`Error saving to ${sheetName}:`, error);
-        res.status(500).json({ message: `Failed to save ${sheetName.slice(0, -1)}` });
+        console.error(`Error saving to ${logicalSheetName}:`, {
+            message: error.message,
+            stack: error.stack,
+            responseData: error.response?.data
+        });
+        res.status(500).json({
+            message: `Failed to save ${logicalSheetName === 'Drafts' ? 'draft' : 'checklist'}`,
+            error: process.env.NODE_ENV === 'production' ? undefined : error.message
+        });
     }
 }
 
