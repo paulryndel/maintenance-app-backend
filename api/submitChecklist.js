@@ -1,4 +1,4 @@
-const { getSheetsClient } = require('./_sheetsClient');
+const { getSheetsClient, SHEET_NAMES } = require('./_sheetsClient');
 
 // --- ADD THIS CONFIG BLOCK ---
 module.exports.config = {
@@ -13,7 +13,8 @@ module.exports.config = {
 async function deleteDraft(sheets, spreadsheetId, draftID) {
     if (!draftID) return;
     try {
-        const res = await sheets.spreadsheets.values.get({ spreadsheetId, range: 'Drafts' });
+        const draftsTitle = SHEET_NAMES.DRAFTS;
+        const res = await sheets.spreadsheets.values.get({ spreadsheetId, range: draftsTitle });
         const rows = res.data.values;
         if (!rows) return;
         const draftIdColIndex = (rows[0] || []).indexOf('DraftID');
@@ -21,7 +22,7 @@ async function deleteDraft(sheets, spreadsheetId, draftID) {
         const rowIndex = rows.findIndex(row => row[draftIdColIndex] === draftID);
         if (rowIndex === -1) return;
         const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
-        const sheet = sheetInfo.data.sheets.find(s => s.properties.title === 'Drafts');
+        const sheet = sheetInfo.data.sheets.find(s => s.properties.title === draftsTitle);
         if (!sheet) return;
         const sheetId = sheet.properties.sheetId;
         
@@ -60,21 +61,28 @@ module.exports = async (request, response) => {
         if (!data.InspectedDate) {
             data.InspectedDate = new Date().toISOString().split('T')[0];
         }
+        // Stringify nested objects for sheet storage
+        Object.keys(data).forEach(k => {
+            if (data[k] && typeof data[k] === 'object') {
+                try { data[k] = JSON.stringify(data[k]); } catch (_) { /* ignore */ }
+            }
+        });
         const { sheets } = getSheetsClient(['https://www.googleapis.com/auth/spreadsheets']);
+        const completedTitle = SHEET_NAMES.COMPLETED; // e.g., FilterTester
         const headerRes = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'FilterTester!1:1',
+            range: `${completedTitle}!1:1`,
         });
         const header = (headerRes.data.values || [])[0];
         if (!header) {
-            return response.status(500).json({ status: 'error', message: 'FilterTester header row missing.' });
+            return response.status(500).json({ status: 'error', message: `${completedTitle} header row missing.` });
         }
-        const newRow = header.map(col => data[col] || '');
-        console.log(`[submitChecklist] Appending checklist ${data.ChecklistID} (draft=${data.DraftID ? 'yes' : 'no'}) with ${header.length} columns.`);
+        const newRow = header.map(col => (data[col] !== undefined ? data[col] : ''));
+        console.log(`[submitChecklist] Appending checklist ${data.ChecklistID} (draft=${data.DraftID ? 'yes' : 'no'}) with ${header.length} columns to tab ${completedTitle}.`);
 
         await sheets.spreadsheets.values.append({
             spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'FilterTester!A1',
+            range: `${completedTitle}!A1`,
             valueInputOption: 'USER_ENTERED',
             resource: { values: [newRow] },
         });
@@ -87,7 +95,7 @@ module.exports = async (request, response) => {
             console.error('[submitChecklist] Missing credentials:', error.message);
             return response.status(500).json({ status: 'error', message: error.message });
         }
-        console.error('API Error (submitChecklist):', error);
-        response.status(500).json({ status: 'error', message: 'Internal Server Error.' });
+        console.error('API Error (submitChecklist):', { message: error.message, stack: error.stack, data: error.response?.data });
+        response.status(500).json({ status: 'error', message: 'Internal Server Error.', error: process.env.NODE_ENV === 'production' ? undefined : error.message });
     }
 };

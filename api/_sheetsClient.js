@@ -1,5 +1,13 @@
 const { google } = require('googleapis');
 
+// Central sheet name mapping with env overrides so serverless functions stay in sync.
+const SHEET_NAMES = {
+  TECHNICIANS: process.env.SHEET_TECHNICIANS || 'TechnicianDetails',
+  CUSTOMERS: process.env.SHEET_CUSTOMERS || 'CustomerList',
+  DRAFTS: process.env.SHEET_DRAFTS || 'Drafts',
+  COMPLETED: process.env.SHEET_COMPLETED || 'FilterTester'
+};
+
 /**
  * Returns an authenticated Google Sheets client with environment variable fallbacks.
  * Supports either GOOGLE_SERVICE_ACCOUNT_EMAIL/GOOGLE_PRIVATE_KEY or GCP_CLIENT_EMAIL/GCP_PRIVATE_KEY.
@@ -23,5 +31,4 @@ function getSheetsClient(scopes = ['https://www.googleapis.com/auth/spreadsheets
   const sheets = google.sheets({ version: 'v4', auth });
   return { auth, sheets };
 }
-
-module.exports = { getSheetsClient };
+module.exports = { getSheetsClient, SHEET_NAMES };
