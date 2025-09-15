@@ -79,12 +79,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('other-header-row').style.display = 'none';
         if (state.currentView === 'login') {
             views.login.classList.remove('hidden');
-            if (mobileTabBar) mobileTabBar.classList.add('hidden');
+            if (mobileTabBar) mobileTabBar.style.display = 'none';
         } else {
             views.app.classList.remove('hidden');
             if (state.currentView === 'homepage') {
                 views.homepage.classList.remove('hidden');
-                if (mobileTabBar) mobileTabBar.classList.remove('hidden');
+                if (mobileTabBar) mobileTabBar.style.display = '';
                 // Show homepage header row (logo + search)
                 document.getElementById('homepage-header-row').style.display = 'flex';
                 document.getElementById('other-header-row').style.display = 'none';
@@ -325,7 +325,9 @@ document.addEventListener('DOMContentLoaded', function() {
             state.photoURL = result.photoURL;
             state.currentView = 'homepage';
 
-            userDisplay.textContent = state.loggedInTechnician;
+            if (userDisplay) {
+                userDisplay.textContent = state.loggedInTechnician;
+            }
             setTechnicianPhoto(state.loggedInTechnician, state.photoURL);
             
             updateClock();
