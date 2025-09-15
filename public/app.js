@@ -352,34 +352,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const draftCard = e.target.closest('.draft-card');
         if (draftCard) {
             const draftData = JSON.parse(draftCard.dataset.draftId);
-            // If previous code worked, maybe it used Object.assign to flatten the draft data
+            // Use full draftData so legacy keys still map; renderChecklistItems will attempt JSON.parse
             state.activeChecklist = {
                 isDraft: true,
                 draftID: draftData.DraftID,
                 customerID: draftData.CustomerID,
                 customerName: draftData.CustomerName,
-                data: normalizeDraftData(draftData)
+                data: { ...draftData }
             };
             state.currentView = 'checklist';
             render();
         }
     });
 
-    function normalizeDraftData(draft) {
-        // Keep only checklist item keys (those matching checklistData ids)
-        const normalized = {};
-        const validIds = new Set(checklistData.flatMap(sec => sec.items.map(i => i.id)));
-        Object.keys(draft).forEach(k => {
-            if (validIds.has(k)) {
-                normalized[k] = draft[k];
-            } else if (!validIds.has(k) && k.includes(' ')) {
-                // Legacy keys with spaces -> convert to underscores
-                const underscored = k.replace(/\s+/g, '_');
-                if (validIds.has(underscored)) normalized[underscored] = draft[k];
-            }
-        });
-        return normalized;
-    }
+    // Remove normalization function (not needed now)
     
     function updateImageSrc(src) {
         if (src.includes('drive.google.com')) {
@@ -728,6 +714,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     tabDrafts.addEventListener('click', function() { showTab('drafts'); });
     tabCompleted.addEventListener('click', function() { showTab('completed'); });
+
+    // --- PDF EXPORT HANDLER ---
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.export-pdf-btn');
+        if (!btn) return;
+        const checklistId = btn.getAttribute('data-checklist-id');
+        btn.disabled = true;
+        const originalText = btn.textContent;
+        btn.textContent = 'Exporting...';
+        try {
+            // For now we just post minimal checklist metadata. In future fetch full details endpoint.
+            const formData = new FormData();
+            formData.append('checklist', JSON.stringify({ ChecklistID: checklistId }));
+            const res = await fetch('/api/exportChecklist', { method: 'POST', body: formData });
+            if (!res.ok) throw new Error('Failed to export PDF');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Checklist-${checklistId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            alert(err.message || 'Export failed');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    });
 
     render();
 });
