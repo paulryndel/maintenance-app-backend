@@ -194,6 +194,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const checklistBody = document.getElementById('checklist-body');
         checklistBody.innerHTML = '';
         let itemNumber = 1;
+
+        // Build a lookup map of normalized keys -> stored value for legacy compatibility
+        const legacyLookup = {};
+        Object.keys(data).forEach(k => {
+            if (!data[k]) return;
+            const norm = k.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+            legacyLookup[norm] = data[k];
+        });
+
+        function getItemStoredValue(itemId) {
+            if (data[itemId]) return data[itemId];
+            const variants = [
+                itemId,
+                itemId.toLowerCase(),
+                itemId.replace(/_/g, ' '),
+                itemId.replace(/_/g, '-'),
+                itemId.replace(/_/g, ''),
+            ];
+            for (const v of variants) {
+                const norm = v.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+                if (legacyLookup[norm]) return legacyLookup[norm];
+            }
+            return null;
+        }
         checklistData.forEach(section => {
             const categoryClass = section.category === 'Heating System' ? 'heating-section-header' : 'bg-gray-100';
             checklistBody.innerHTML += `<tr class="${categoryClass}"><td colspan="10" class="px-6 py-3 font-bold text-brand-dark">${section.category}</td></tr>`;
@@ -201,27 +225,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 const actionName = `action-row-${itemNumber}`;
                 
                 let savedAction = '', savedResult = '', savedPhotos = [];
-                if (data[item.id]) {
+                const storedValue = getItemStoredValue(item.id);
+                if (storedValue) {
                     try {
-                        const itemData = JSON.parse(data[item.id]);
+                        const itemData = JSON.parse(storedValue);
                         if (typeof itemData === 'object' && itemData !== null) {
                             savedAction = itemData.status || '';
                             savedResult = itemData.result || '';
-                            if (itemData.photos) {
+                            if (itemData.photos && Array.isArray(itemData.photos)) {
                                 savedPhotos = itemData.photos.map(photo => {
-                                    if (photo.includes('drive.google.com')) {
-                                        const fileId = new URL(photo).searchParams.get('id');
-                                        return `/api/getImage?fileId=${fileId}`;
+                                    if (typeof photo === 'string' && photo.includes('drive.google.com')) {
+                                        try {
+                                            const fileId = new URL(photo).searchParams.get('id');
+                                            return `/api/getImage?fileId=${fileId}`;
+                                        } catch { return photo; }
                                     }
                                     return photo;
                                 });
                             }
                         }
                     } catch (e) {
-                        console.error(`Error parsing data for item ${item.id}:`, data[item.id], e);
-                        // Fallback for old string format if necessary
-                        [savedAction, ...savedResultParts] = String(data[item.id]).split(' - ');
-                        savedResult = savedResultParts.join(' - ');
+                        // Legacy raw format: ACTION - Result text
+                        const parts = String(storedValue).split(' - ');
+                        savedAction = parts.shift() || '';
+                        savedResult = parts.join(' - ');
                     }
                 }
 
