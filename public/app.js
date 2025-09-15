@@ -67,6 +67,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const photoViewerCloseBtn = document.getElementById('photo-viewer-close');
 
     const mobileTabBar = document.getElementById('mobile-tab-bar');
+    const searchBar = document.getElementById('search-bar');
+    let searchQuery = '';
 
 
     // --- RENDER FUNCTIONS ---
@@ -89,6 +91,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    if (searchBar) {
+        searchBar.addEventListener('input', function(e) {
+            searchQuery = e.target.value.trim().toLowerCase();
+            renderHomepage();
+        });
+    }
+
+    function filterItems(items) {
+        if (!searchQuery) return items;
+        return items.filter(item => {
+            return (
+                (item.CustomerName && item.CustomerName.toLowerCase().includes(searchQuery)) ||
+                (item.MachineType && item.MachineType.toLowerCase().includes(searchQuery)) ||
+                (item.SerialNo && item.SerialNo.toLowerCase().includes(searchQuery))
+            );
+        });
+    }
+
     function renderHomepage() {
         homepageLoader.classList.remove('hidden');
         dashboardContent.classList.add('hidden');
@@ -104,10 +124,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             customerSelect.innerHTML = customerOptionsHTML;
 
+            // Filter drafts and completed by search
+            const filteredDrafts = filterItems(state.drafts);
+            const filteredCompleted = filterItems(state.completed);
+
             draftsSection.innerHTML = `<h2 class="section-title">In-Progress Drafts</h2>`;
-            if (state.drafts.length > 0) {
+            if (filteredDrafts.length > 0) {
                 let draftsHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">`;
-                state.drafts.forEach(draft => {
+                filteredDrafts.forEach(draft => {
                     draftsHTML += `<div class="info-card cursor-pointer draft-card" data-draft-id='${JSON.stringify(draft)}'>
                         <p class="font-bold">${draft.CustomerName || 'N/A'}</p>
                         <p class="text-sm text-brand-gray">Model: ${draft.MachineType || 'N/A'}</p>
@@ -122,9 +146,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             completedSection.innerHTML = `<h2 class="section-title">Completed Checklists</h2>`;
-            if (state.completed.length > 0) {
+            if (filteredCompleted.length > 0) {
                 let completedHTML = `<div class="space-y-2 mt-4">`;
-                 state.completed.slice(0, 5).forEach(item => {
+                 filteredCompleted.slice(0, 5).forEach(item => {
                     completedHTML += `<div class="info-card">
                         <p class="font-bold">${item.CustomerName || 'N/A'}</p>
                         <p class="text-sm text-brand-gray">Completed on: ${new Date(item.InspectedDate).toLocaleDateString()}</p>
@@ -135,7 +159,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 completedSection.innerHTML += `<p class="text-brand-gray mt-4">No completed checklists found.</p>`;
             }
-            
             homepageLoader.classList.add('hidden');
             dashboardContent.classList.remove('hidden');
         });
