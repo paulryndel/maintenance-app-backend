@@ -66,19 +66,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const photoViewerBody = document.getElementById('photo-viewer-body');
     const photoViewerCloseBtn = document.getElementById('photo-viewer-close');
 
+    const mobileTabBar = document.getElementById('mobile-tab-bar');
+
 
     // --- RENDER FUNCTIONS ---
     function render() {
         Object.values(views).forEach(v => v.classList.add('hidden'));
         if (state.currentView === 'login') {
             views.login.classList.remove('hidden');
+            if (mobileTabBar) mobileTabBar.classList.add('hidden');
         } else {
             views.app.classList.remove('hidden');
             if (state.currentView === 'homepage') {
                 views.homepage.classList.remove('hidden');
+                if (mobileTabBar) mobileTabBar.classList.remove('hidden');
                 renderHomepage();
             } else if (state.currentView === 'checklist') {
                 views.checklist.classList.remove('hidden');
+                if (mobileTabBar) mobileTabBar.classList.add('hidden');
                 renderChecklistPage();
             }
         }
