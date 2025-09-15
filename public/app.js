@@ -80,12 +80,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('other-header-row').style.display = 'none';
         if (state.currentView === 'login') {
             views.login.classList.remove('hidden');
-            if (mobileTabBar) mobileTabBar.style.display = 'none';
+            if (mobileTabBar) mobileTabBar.classList.add('hidden');
         } else {
             views.app.classList.remove('hidden');
             if (state.currentView === 'homepage') {
                 views.homepage.classList.remove('hidden');
-                if (mobileTabBar) mobileTabBar.style.display = '';
+                if (mobileTabBar) mobileTabBar.classList.remove('hidden');
                 // Show homepage header row (logo + search)
                 document.getElementById('homepage-header-row').style.display = 'flex';
                 document.getElementById('other-header-row').style.display = 'none';
@@ -358,12 +358,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 draftID: draftData.DraftID,
                 customerID: draftData.CustomerID,
                 customerName: draftData.CustomerName,
-                data: { ...draftData }
+                data: normalizeDraftData(draftData)
             };
             state.currentView = 'checklist';
             render();
         }
     });
+
+    function normalizeDraftData(draft) {
+        // Keep only checklist item keys (those matching checklistData ids)
+        const normalized = {};
+        const validIds = new Set(checklistData.flatMap(sec => sec.items.map(i => i.id)));
+        Object.keys(draft).forEach(k => {
+            if (validIds.has(k)) {
+                normalized[k] = draft[k];
+            } else if (!validIds.has(k) && k.includes(' ')) {
+                // Legacy keys with spaces -> convert to underscores
+                const underscored = k.replace(/\s+/g, '_');
+                if (validIds.has(underscored)) normalized[underscored] = draft[k];
+            }
+        });
+        return normalized;
+    }
     
     function updateImageSrc(src) {
         if (src.includes('drive.google.com')) {
