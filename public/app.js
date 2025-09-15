@@ -517,6 +517,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!res.ok) throw new Error(result.message || 'Failed to save draft.');
             state.activeChecklist.draftID = result.draftID;
             state.activeChecklist.isDraft = true;
+            // refresh homepage data in background so when user returns it's up to date
+            fetchHomepageData().catch(()=>{});
             showModal('Success', 'Your draft has been saved successfully.');
         } catch (err) {
             showModal('Error', err.message);
@@ -542,11 +544,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await res.json();
             if (!res.ok) throw new Error(result.message || 'Internal Server Error.');
             showModal('Success', 'Checklist submitted successfully!');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                state.currentView = 'homepage';
-                render();
-            }, 2000);
+            // Reload homepage data before navigating back
+            fetchHomepageData().finally(() => {
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    state.currentView = 'homepage';
+                    render();
+                }, 1000);
+            });
         } catch (err) {
             showModal('Error', err.message);
         } finally {
