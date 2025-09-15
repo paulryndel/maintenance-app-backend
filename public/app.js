@@ -149,10 +149,11 @@ document.addEventListener('DOMContentLoaded', function() {
             completedSection.innerHTML = `<h2 class="section-title">Completed Checklists</h2>`;
             if (filteredCompleted.length > 0) {
                 let completedHTML = `<div class="space-y-2 mt-4">`;
-                 filteredCompleted.slice(0, 5).forEach(item => {
+                filteredCompleted.forEach(item => {
                     completedHTML += `<div class="info-card">
                         <p class="font-bold">${item.CustomerName || 'N/A'}</p>
                         <p class="text-sm text-brand-gray">Completed on: ${new Date(item.InspectedDate).toLocaleDateString()}</p>
+                        <button class="button-secondary export-pdf-btn mt-2" data-checklist-id="${item.ChecklistID}">Export PDF</button>
                     </div>`;
                 });
                 completedHTML += `</div>`;
@@ -160,6 +161,54 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 completedSection.innerHTML += `<p class="text-brand-gray mt-4">No completed checklists found.</p>`;
             }
+    // --- EXPORT PDF LOGIC ---
+    document.addEventListener('click', async function(e) {
+        if (e.target.classList.contains('export-pdf-btn')) {
+            const checklistId = e.target.getAttribute('data-checklist-id');
+            e.target.disabled = true;
+            e.target.textContent = 'Exporting...';
+            try {
+                // Find the checklist data from state.completed
+                const checklist = state.completed.find(c => c.ChecklistID === checklistId);
+                if (!checklist) throw new Error('Checklist not found');
+                // Fetch photos for this checklist (assuming checklist.photos is available)
+                const photos = checklist.photos || [];
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('checklist', JSON.stringify(checklist));
+                // If photos are URLs, fetch and append as blobs
+                for (const photo of photos) {
+                    if (photo.url) {
+                        const resp = await fetch(photo.url);
+                        const blob = await resp.blob();
+                        formData.append('photos', blob, photo.description || 'photo.jpg');
+                    }
+                }
+                // Call exportChecklist API
+                const res = await fetch('/api/exportChecklist', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!res.ok) throw new Error('Failed to export PDF');
+                const pdfBlob = await res.blob();
+                // Download PDF
+                const url = window.URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Checklist_${checklistId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                e.target.textContent = 'Export PDF';
+                e.target.disabled = false;
+            } catch (err) {
+                e.target.textContent = 'Export PDF';
+                e.target.disabled = false;
+                alert('Failed to export PDF: ' + err.message);
+            }
+        }
+    });
             homepageLoader.classList.add('hidden');
             dashboardContent.classList.remove('hidden');
         });

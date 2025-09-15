@@ -15,11 +15,12 @@
   "license": "ISC",
   "dependencies": {
     "formidable": "^3.5.1",
-    "googleapis": "^134.0.0"
+    "googleapis": "^134.0.0",
+    "pdfkit": "^0.17.2"
   },
   "devDependencies": {
-    "tailwindcss": "^3.4.10",
+    "autoprefixer": "^10.4.20",
     "postcss": "^8.4.41",
-    "autoprefixer": "^10.4.20"
+    "tailwindcss": "^3.4.10"
   }
 }
