@@ -1,4 +1,44 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // --- LOGOUT MODAL LOGIC ---
+    const logoutModal = document.getElementById('logoutModal');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const switchAccountBtn = document.getElementById('switchAccountBtn');
+    const closeLogoutModal = document.getElementById('closeLogoutModal');
+
+    if (footerTechnicianPhoto) {
+        footerTechnicianPhoto.addEventListener('click', function() {
+            if (state.currentView === 'homepage') {
+                logoutModal.classList.remove('hidden');
+            }
+        });
+    }
+    if (closeLogoutModal) {
+        closeLogoutModal.addEventListener('click', function() {
+            logoutModal.classList.add('hidden');
+        });
+    }
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            logoutModal.classList.add('hidden');
+            // Perform logout
+            state.loggedInTechnician = null;
+            state.technicianId = null;
+            state.photoURL = null;
+            state.currentView = 'login';
+            render();
+        });
+    }
+    if (switchAccountBtn) {
+        switchAccountBtn.addEventListener('click', function() {
+            logoutModal.classList.add('hidden');
+            // Go to login view for another account
+            state.loggedInTechnician = null;
+            state.technicianId = null;
+            state.photoURL = null;
+            state.currentView = 'login';
+            render();
+        });
+    }
     // --- STATE MANAGEMENT ---
     let state = {
         loggedInTechnician: null, technicianId: null, photoURL: null,
@@ -75,6 +115,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- RENDER FUNCTIONS ---
     function render() {
         Object.values(views).forEach(v => v.classList.add('hidden'));
+        // Hide both header rows by default
+        document.getElementById('homepage-header-row').style.display = 'none';
+        document.getElementById('other-header-row').style.display = 'none';
         if (state.currentView === 'login') {
             views.login.classList.remove('hidden');
             if (mobileTabBar) mobileTabBar.classList.add('hidden');
@@ -83,11 +126,21 @@ document.addEventListener('DOMContentLoaded', function() {
             if (state.currentView === 'homepage') {
                 views.homepage.classList.remove('hidden');
                 if (mobileTabBar) mobileTabBar.classList.remove('hidden');
+                // Show homepage header row (logo + search)
+                document.getElementById('homepage-header-row').style.display = 'flex';
+                document.getElementById('other-header-row').style.display = 'none';
                 renderHomepage();
             } else if (state.currentView === 'checklist') {
                 views.checklist.classList.remove('hidden');
                 if (mobileTabBar) mobileTabBar.classList.add('hidden');
+                // Show other header row (user info + logout)
+                document.getElementById('homepage-header-row').style.display = 'none';
+                document.getElementById('other-header-row').style.display = 'flex';
                 renderChecklistPage();
+            } else {
+                // For any other view, show other header row
+                document.getElementById('homepage-header-row').style.display = 'none';
+                document.getElementById('other-header-row').style.display = 'flex';
             }
         }
     }

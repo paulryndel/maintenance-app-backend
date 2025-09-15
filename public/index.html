@@ -39,18 +39,20 @@
     <div id="app-container" class="hidden">
         <header class="bg-white sticky top-0 z-20 apple-shadow">
             <div class="container mx-auto p-4 flex flex-col gap-2">
-                <div class="flex justify-between items-center mb-2">
+                <!-- Homepage header row: logo + search bar -->
+                <div id="homepage-header-row" class="flex justify-between items-center mb-2" style="display:none;">
+                    <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Engineering Logo" class="h-8 w-auto rounded-lg shadow-sm" style="object-fit:contain;">
+                    <input id="search-bar" type="text" placeholder="Search customer, model, or serial..." class="input-field w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary ml-4" />
+                </div>
+                <!-- Other header row: user info + logout -->
+                <div id="other-header-row" class="flex justify-between items-center mb-2">
                     <div class="flex items-center gap-3 overflow-hidden">
                         <div class="overflow-hidden">
                             <p class="font-bold text-dark text-sm sm:text-base truncate" id="loggedInUserDisplay"></p>
                             <p class="text-xs text-secondary" id="dateTimeClock"></p>
                         </div>
                     </div>
-                    <img src="https://i.postimg.cc/YStWH6PQ/Logo-LT.jpg" alt="Labtech Engineering Logo" class="h-10 w-auto rounded-lg shadow-sm" style="object-fit:contain;">
                     <button id="logout-button" class="button-secondary flex-shrink-0">Log Out</button>
-                </div>
-                <div class="flex justify-center">
-                    <input id="search-bar" type="text" placeholder="Search customer, model, or serial..." class="input-field w-full max-w-md rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
                 </div>
             </div>
         </header>
@@ -235,7 +237,17 @@
                 <span class="text-xs">Completed</span>
             </button>
         </div>
-        <img id="footerTechnicianPhoto" src="" alt="Tech" class="ml-2 w-10 h-10 rounded-full object-cover bg-gray-200 border border-gray-300 shadow-sm" style="object-fit:cover;">
+        <img id="footerTechnicianPhoto" src="" alt="Tech" class="ml-2 w-10 h-10 rounded-full object-cover bg-gray-200 border border-gray-300 shadow-sm cursor-pointer" style="object-fit:cover;">
+    </div>
+
+    <!-- Logout/Sign-in Modal -->
+    <div id="logoutModal" class="modal-overlay hidden">
+        <div class="modal-content p-4 sm:p-6 w-full max-w-sm mx-auto">
+            <h3 class="section-title mb-4">Account Options</h3>
+            <button id="logoutBtn" class="button-secondary w-full mb-3">Log Out</button>
+            <button id="switchAccountBtn" class="button-primary w-full">Sign in to another account</button>
+            <button id="closeLogoutModal" class="button-secondary w-full mt-6">Cancel</button>
+        </div>
     </div>
     </body>
 </body>
