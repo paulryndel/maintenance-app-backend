@@ -3,8 +3,9 @@ const { google } = require('googleapis');
 module.exports = async (request, response) => {
     const { fileId } = request.query;
 
-    if (!fileId) {
-        return response.status(400).json({ error: 'File ID is required.' });
+    if (!fileId || fileId === 'null') {
+        // Return a default image or error if fileId is missing/null
+        return response.status(400).json({ error: 'File ID is required and cannot be null.' });
     }
 
     try {
