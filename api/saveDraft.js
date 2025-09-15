@@ -1,4 +1,4 @@
-const { google } = require('googleapis');
+const { getSheetsClient } = require('./_sheetsClient');
 
 // --- ADD THIS CONFIG BLOCK ---
 module.exports.config = {
@@ -25,19 +25,9 @@ module.exports = async (request, response) => {
         if (!draftData.InspectedDate) {
             draftData.InspectedDate = new Date().toISOString().split('T')[0];
         }
-        const auth = new google.auth.GoogleAuth({
-            credentials: {
-                client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-                private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-            },
-            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        });
-        const sheets = google.sheets({ version: 'v4', auth });
+        const { sheets } = getSheetsClient(['https://www.googleapis.com/auth/spreadsheets']);
         const range = 'Drafts';
-        const sheetData = await sheets.spreadsheets.values.get({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: range,
-        });
+        const sheetData = await sheets.spreadsheets.values.get({ spreadsheetId: process.env.SPREADSHEET_ID, range });
         const header = sheetData.data.values[0];
         if (!header || header.length === 0) {
             return response.status(500).json({ message: 'Drafts sheet header missing.' });
@@ -76,7 +66,11 @@ module.exports = async (request, response) => {
         });
         response.status(200).json({ status: 'created', draftID: newDraftID });
     } catch (error) {
-        console.error('API Error:', error);
+        if (error.code === 'MISSING_GOOGLE_CREDENTIALS') {
+            console.error('[saveDraft] Missing credentials:', error.message);
+            return response.status(500).json({ message: error.message });
+        }
+        console.error('API Error (saveDraft):', error);
         response.status(500).json({ message: 'Failed to save draft.' });
     }
 };

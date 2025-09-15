@@ -1,4 +1,4 @@
-const { google } = require('googleapis');
+const { getSheetsClient } = require('./_sheetsClient');
 
 module.exports = async (request, response) => {
     if (request.method !== 'POST') {
@@ -6,14 +6,7 @@ module.exports = async (request, response) => {
     }
     try {
         const { username, password } = request.body;
-        const auth = new google.auth.GoogleAuth({
-            credentials: {
-                client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-                private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-            },
-            scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-        });
-        const sheets = google.sheets({ version: 'v4', auth });
+        const { sheets } = getSheetsClient(['https://www.googleapis.com/auth/spreadsheets.readonly']);
         const sheetData = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.SPREADSHEET_ID,
             range: 'TechnicianDetails!A:E',
@@ -47,7 +40,11 @@ module.exports = async (request, response) => {
             response.status(401).json({ status: 'fail', message: 'Invalid credentials.' });
         }
     } catch (error) {
-        console.error('API Error:', error);
+        if (error.code === 'MISSING_GOOGLE_CREDENTIALS') {
+            console.error('[login] Missing credentials:', error.message);
+            return response.status(500).json({ status: 'error', message: error.message });
+        }
+        console.error('API Error (login):', error);
         response.status(500).json({ status: 'error', message: 'Internal Server Error.' });
     }
 };

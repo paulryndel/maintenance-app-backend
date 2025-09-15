@@ -1,4 +1,4 @@
-const { google } = require('googleapis');
+const { getSheetsClient } = require('./_sheetsClient');
 
 // --- ADD THIS CONFIG BLOCK ---
 module.exports.config = {
@@ -60,14 +60,7 @@ module.exports = async (request, response) => {
         if (!data.InspectedDate) {
             data.InspectedDate = new Date().toISOString().split('T')[0];
         }
-        const auth = new google.auth.GoogleAuth({
-            credentials: {
-                client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-                private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-            },
-            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        });
-        const sheets = google.sheets({ version: 'v4', auth });
+        const { sheets } = getSheetsClient(['https://www.googleapis.com/auth/spreadsheets']);
         const headerRes = await sheets.spreadsheets.values.get({
             spreadsheetId: process.env.SPREADSHEET_ID,
             range: 'FilterTester!1:1',
@@ -90,7 +83,11 @@ module.exports = async (request, response) => {
         
         response.status(200).json({ status: 'success', message: 'Checklist submitted successfully.', checklistID: data.ChecklistID });
     } catch (error) {
-        console.error('API Error:', error);
+        if (error.code === 'MISSING_GOOGLE_CREDENTIALS') {
+            console.error('[submitChecklist] Missing credentials:', error.message);
+            return response.status(500).json({ status: 'error', message: error.message });
+        }
+        console.error('API Error (submitChecklist):', error);
         response.status(500).json({ status: 'error', message: 'Internal Server Error.' });
     }
 };
