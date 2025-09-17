@@ -15,48 +15,31 @@ function safeUnlink(filePath) {
 // Utility: parse request body if not already parsed
 async function parseBody(req) {
     if (req.body !== undefined) {
-        console.log('[PDF Export] Body already parsed by framework:', req.body);
         return req.body;
     }
-    
-    // Check if it's multipart/form-data
     const contentType = req.headers['content-type'] || '';
     if (contentType.includes('multipart/form-data')) {
-        console.log('[PDF Export] Detected multipart/form-data, using formidable...');
         return new Promise((resolve, reject) => {
             const form = new IncomingForm();
-            form.parse(req, (err, fields, files) => {
-                if (err) {
-                    console.error('[PDF Export] Formidable parse error:', err);
-                    reject(err);
-                } else {
-                    // Only return fields, not files, for checklist export
-                    resolve(fields);
-                }
+            form.parse(req, (err, fields) => {
+                if (err) reject(err);
+                else resolve(fields);
             });
         });
     }
-    
     return new Promise((resolve) => {
         let body = '';
-        console.log('[PDF Export] Manually parsing request body...');
         req.on('data', chunk => {
             body += chunk.toString();
-            console.log('[PDF Export] Received chunk:', chunk.toString());
         });
         req.on('end', () => {
-            console.log('[PDF Export] Raw body string:', body);
             try {
                 const parsed = body ? JSON.parse(body) : {};
-                console.log('[PDF Export] Parsed body:', parsed);
                 resolve(parsed);
             } catch (e) {
-                console.log('[PDF Export] JSON parse error:', e.message);
-                console.log('[PDF Export] Trying to parse as URL encoded...');
                 // Try URL encoded parsing
                 const urlencoded = new URLSearchParams(body);
                 const result = Object.fromEntries(urlencoded);
-                console.log('[PDF Export] URL encoded result:', result);
                 resolve(result);
             }
         });
@@ -115,101 +98,13 @@ module.exports = async (req, res) => {
     // Handle both GET and POST methods
     if (req.method === 'GET') {
         checklistId = req.query.checklistId;
-        console.log(`[PDF Export] GET query params:`, req.query);
         if (!checklistId) {
-            console.error('[PDF Export] Missing checklistId parameter in GET request');
             return res.status(400).json({ status: 'error', message: 'Missing required parameter: checklistId' });
         }
     } else if (req.method === 'POST') {
-        // Parse body if not already parsed by Vercel
         req.body = await parseBody(req);
-        
-        // Handle POST request - try to extract checklistId from multiple possible sources
-        console.log('[PDF Export] === POST REQUEST DEBUGGING ===');
-        console.log('[PDF Export] Headers:', JSON.stringify(req.headers, null, 2));
-        console.log('[PDF Export] Content-Type:', req.headers['content-type']);
-        console.log('[PDF Export] POST body type:', typeof req.body);
-        console.log('[PDF Export] POST body received:', JSON.stringify(req.body, null, 2));
-        console.log('[PDF Export] POST body keys:', Object.keys(req.body || {}));
-        console.log('[PDF Export] Query params:', JSON.stringify(req.query || {}, null, 2));
-        console.log('[PDF Export] URL:', req.url);
-        
-        // Also check if data might be in query params for some reason
-        if (req.query && Object.keys(req.query).length > 0) {
-            console.log('[PDF Export] Found data in query params, checking for checklistId...');
-        }
-        
-        // Ensure req.body exists, if not initialize as empty object
-        if (!req.body) {
-            req.body = {};
-            console.log('[PDF Export] POST body was undefined, initialized as empty object');
-        }
-        
-        checklistId = req.body?.checklistId || 
-                     req.body?.ChecklistID || 
-                     req.body?.id || 
-                     req.body?.ID ||
-                     req.body?.checklist?.ChecklistID ||
-                     req.body?.checklist?.checklistId ||
-                     req.body?.checklist?.id ||
-                     req.query?.checklistId ||  // Fallback to query params
-                     req.query?.ChecklistID ||
-                     req.query?.id;
-        
-        console.log(`[PDF Export] Extracted checklistId: ${checklistId}`);
-        
-        // If still no checklistId found, try to extract from nested data
-        if (!checklistId && req.body?.checklist) {
-            try {
-                let checklistData = req.body.checklist;
-                console.log('[PDF Export] DEBUG: req.body.checklist type:', typeof checklistData);
-                console.log('[PDF Export] DEBUG: req.body.checklist value:', checklistData);
-                if (typeof checklistData === 'string') {
-                    try {
-                        checklistData = JSON.parse(checklistData);
-                        console.log('[PDF Export] DEBUG: checklistData parsed as JSON:', checklistData);
-                    } catch (e) {
-                        // fallback: treat as URL-encoded string
-                        const urlencoded = new URLSearchParams(checklistData);
-                        checklistData = Object.fromEntries(urlencoded);
-                        console.log('[PDF Export] DEBUG: checklistData parsed as URL-encoded:', checklistData);
-                    }
-                }
-                // Try all possible key casings and names
-                checklistId = checklistData?.ChecklistID || checklistData?.checklistId || checklistData?.id || checklistData?.ID;
-                console.log('[PDF Export] DEBUG: checklistId after direct extraction:', checklistId);
-                // Fallback: search for any key containing 'id'
-                if (!checklistId && typeof checklistData === 'object') {
-                    const possibleIds = Object.entries(checklistData).find(([key, value]) =>
-                        key.toLowerCase().includes('id') && value && typeof value === 'string'
-                    );
-                    if (possibleIds) {
-                        checklistId = possibleIds[1];
-                        console.log(`[PDF Export] Using fallback ID from nested checklist field '${possibleIds[0]}': ${checklistId}`);
-                    }
-                }
-                console.log('[PDF Export] DEBUG: checklistId after fallback extraction:', checklistId);
-            } catch (e) {
-                console.log('[PDF Export] Failed to parse nested checklist data:', e.message);
-            }
-        }
-        
-        // If still no ID, try to find any field that looks like an ID
-        if (!checklistId && req.body && typeof req.body === 'object') {
-            const possibleIds = Object.entries(req.body).find(([key, value]) => 
-                key.toLowerCase().includes('id') && value && typeof value === 'string'
-            );
-            if (possibleIds) {
-                checklistId = possibleIds[1];
-                console.log(`[PDF Export] Using fallback ID from field '${possibleIds[0]}': ${checklistId}`);
-            }
-        }
-        
-        console.log(`[PDF Export] Extracted checklistId: ${checklistId}`);
-        
+        checklistId = req.body.checklistId || (req.body.checklist && (req.body.checklist.ChecklistID || req.body.checklist.checklistId || req.body.checklist.id));
         if (!checklistId) {
-            console.error('[PDF Export] Missing checklistId in POST body');
-            console.error('[PDF Export] Available fields in body:', Object.keys(req.body));
             return res.status(400).json({ 
                 status: 'error', 
                 message: 'Missing required field: checklistId. Please include checklistId in the request body.',
