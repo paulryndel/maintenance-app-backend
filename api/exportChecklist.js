@@ -161,10 +161,28 @@ module.exports = async (req, res) => {
         // If still no checklistId found, try to extract from nested data
         if (!checklistId && req.body?.checklist) {
             try {
-                const checklistData = typeof req.body.checklist === 'string' 
-                    ? JSON.parse(req.body.checklist) 
-                    : req.body.checklist;
-                checklistId = checklistData?.ChecklistID || checklistData?.checklistId || checklistData?.id;
+                let checklistData = req.body.checklist;
+                if (typeof checklistData === 'string') {
+                    try {
+                        checklistData = JSON.parse(checklistData);
+                    } catch (e) {
+                        // fallback: treat as URL-encoded string
+                        const urlencoded = new URLSearchParams(checklistData);
+                        checklistData = Object.fromEntries(urlencoded);
+                    }
+                }
+                // Try all possible key casings and names
+                checklistId = checklistData?.ChecklistID || checklistData?.checklistId || checklistData?.id || checklistData?.ID;
+                // Fallback: search for any key containing 'id'
+                if (!checklistId && typeof checklistData === 'object') {
+                    const possibleIds = Object.entries(checklistData).find(([key, value]) =>
+                        key.toLowerCase().includes('id') && value && typeof value === 'string'
+                    );
+                    if (possibleIds) {
+                        checklistId = possibleIds[1];
+                        console.log(`[PDF Export] Using fallback ID from nested checklist field '${possibleIds[0]}': ${checklistId}`);
+                    }
+                }
             } catch (e) {
                 console.log('[PDF Export] Failed to parse nested checklist data:', e.message);
             }
