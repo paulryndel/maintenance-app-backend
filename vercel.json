@@ -4,10 +4,6 @@
   "framework": null,
   "functions": {
     "api/*.js": {
-      "memory": 512,
-      "maxDuration": 30
-    },
-    "api/exportChecklist.js": {
       "memory": 1024,
       "maxDuration": 60
     }
