@@ -1,5 +1,5 @@
 const generateChecklistPDF = require('./generateChecklistPDF');
-const formidable = require('formidable').formidable;
+const { google } = require('googleapis');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -10,171 +10,147 @@ function safeUnlink(filePath) {
     fs.promises.unlink(filePath).catch(() => {/* ignore */});
 }
 
-module.exports.config = {
-    api: {
-        bodyParser: false,
-    },
+// Google Sheets configuration (same as main app)
+const sheets = google.sheets('v4');
+const SHEET_NAMES = {
+    COMPLETED: process.env.SHEET_COMPLETED || 'FilterTester'
 };
+
+const SERVICE_ACCOUNT_EMAIL = process.env.GCP_CLIENT_EMAIL || process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+let SERVICE_ACCOUNT_KEY = process.env.GCP_PRIVATE_KEY || process.env.GOOGLE_PRIVATE_KEY || '';
+if (SERVICE_ACCOUNT_KEY) {
+    SERVICE_ACCOUNT_KEY = SERVICE_ACCOUNT_KEY.replace(/\\n/g, '\n');
+}
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
+
+async function getAuthClient() {
+    if (!SERVICE_ACCOUNT_EMAIL || !SERVICE_ACCOUNT_KEY) {
+        throw new Error('Missing Google Cloud credentials');
+    }
+    const auth = new google.auth.GoogleAuth({
+        credentials: {
+            client_email: SERVICE_ACCOUNT_EMAIL,
+            private_key: SERVICE_ACCOUNT_KEY,
+        },
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+    return await auth.getClient();
+}
 
 module.exports = async (req, res) => {
     const startTime = Date.now();
     console.log(`[PDF Export] Starting export request at ${new Date().toISOString()}`);
     
-    if (req.method !== 'POST') {
+    if (req.method !== 'GET') {
         console.log(`[PDF Export] Method not allowed: ${req.method}`);
-        return res.status(405).send('Method Not Allowed');
+        return res.status(405).send('Method Not Allowed - Use GET with checklistId parameter');
     }
 
-    const form = formidable({
-        multiples: true,
-        maxFileSize: 10 * 1024 * 1024, // 10MB per photo
-        filter: part => {
-            if (part.mimetype && !part.mimetype.startsWith('image/')) {
-                part.emit('error', new Error('Only image uploads are allowed.'));
-                return false;
-            }
-            return true;
-        }
-    });
+    const checklistId = req.query.checklistId;
+    if (!checklistId) {
+        console.error('[PDF Export] Missing checklistId parameter');
+        return res.status(400).json({ status: 'error', message: 'Missing required parameter: checklistId' });
+    }
 
-    form.parse(req, async (err, fields, files) => {
-        console.log(`[PDF Export] Form parsing completed`);
-        console.log(`[PDF Export] Fields received:`, Object.keys(fields));
-        console.log(`[PDF Export] Files received:`, Object.keys(files));
-        console.log(`[PDF Export] Raw fields data:`, fields);
-        console.log(`[PDF Export] Raw files data:`, files);
-        if (err) {
-            console.error('[PDF Export] Form parse error:', err);
-            return res.status(400).json({ status: 'error', message: 'Form parse error.' });
-        }
+    console.log(`[PDF Export] Fetching checklist data for ID: ${checklistId}`);
 
-        let checklistRaw = fields.checklist || fields.data || fields.checklistData || '{}';
-        // Handle case where formidable returns an array
-        if (Array.isArray(checklistRaw)) {
-            checklistRaw = checklistRaw[0] || '{}';
-        }
-        let checklist;
-        try {
-            checklist = typeof checklistRaw === 'string' ? JSON.parse(checklistRaw) : checklistRaw;
-            console.log(`[PDF Export] Checklist parsed successfully:`, Object.keys(checklist));
-            console.log(`[PDF Export] Full checklist data:`, JSON.stringify(checklist, null, 2));
-        } catch (e) {
-            console.error('[PDF Export] JSON parse error:', e);
-            console.error('[PDF Export] Raw checklist data:', checklistRaw);
-            
-            // Try to create a basic checklist from individual fields if JSON parsing fails
-            console.log('[PDF Export] Attempting to create checklist from individual fields...');
-            checklist = {};
-            
-            // Extract basic fields from form data
-            Object.keys(fields).forEach(key => {
-                if (key !== 'checklist' && key !== 'data' && key !== 'checklistData') {
-                    let value = fields[key];
-                    if (Array.isArray(value)) value = value[0];
-                    checklist[key] = value;
-                }
-            });
-            
-            console.log(`[PDF Export] Reconstructed checklist:`, JSON.stringify(checklist, null, 2));
-            
-            if (Object.keys(checklist).length === 0) {
-                return res.status(400).json({ status: 'error', message: 'Invalid checklist data and no individual fields found.' });
-            }
-        }
-
-        // More flexible field validation - check for variations of field names
-        const checklistId = checklist.ChecklistID || checklist.checklistId || checklist.id || checklist.ID || `PDF-${Date.now()}`;
-        const customerId = checklist.CustomerID || checklist.customerId || checklist.customer || checklist.Customer || checklist.customerName || 'Unknown Customer';
-        const technicianId = checklist.TechnicianID || checklist.technicianId || checklist.technician || checklist.Technician || checklist.technicianName || 'Unknown Technician';
+    try {
+        // Get authentication client
+        const auth = await getAuthClient();
         
-        // Add additional fields that might be missing
-        checklist.ChecklistID = checklistId;
-        checklist.CustomerID = customerId;
-        checklist.TechnicianID = technicianId;
-        checklist.CustomerName = checklist.CustomerName || checklist.customerName || customerId;
-        checklist.TechnicianName = checklist.TechnicianName || checklist.technicianName || technicianId;
-        checklist.Date = checklist.Date || checklist.date || new Date().toLocaleDateString();
-        
-        console.log(`[PDF Export] Normalized data:`, {
-            ChecklistID: checklistId,
-            CustomerName: checklist.CustomerName,
-            TechnicianName: checklist.TechnicianName,
-            Date: checklist.Date,
-            totalFields: Object.keys(checklist).length
+        // Fetch data from FilterTester sheet
+        console.log(`[PDF Export] Reading from sheet: ${SHEET_NAMES.COMPLETED}`);
+        const response = await sheets.spreadsheets.values.get({
+            auth,
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${SHEET_NAMES.COMPLETED}!A:ZZ`, // Get all columns
         });
 
-        // Uploaded photos processing
-        const photos = [];
-        const tempFiles = []; // track to cleanup
-        try {
-            // Check for photos in different possible field names
-            const photoFields = files.photos || files.images || files.attachments || [];
-            console.log(`[PDF Export] Photo fields found:`, photoFields);
-            
-            if (photoFields && photoFields.length > 0) {
-                const photoFiles = Array.isArray(photoFields) ? photoFields : [photoFields];
-                console.log(`[PDF Export] Processing ${photoFiles.length} photo files`);
-                
-                for (const file of photoFiles) {
-                    if (file && file.filepath) {
-                        // Use os.tmpdir() for better cross-platform compatibility
-                        const photoPath = path.join(os.tmpdir(), file.newFilename || `photo_${Date.now()}.jpg`);
-                        fs.renameSync(file.filepath, photoPath);
-                        photos.push({ 
-                            url: photoPath, 
-                            description: file.originalFilename || `Photo ${photos.length + 1}` 
-                        });
-                        tempFiles.push(photoPath);
-                        console.log(`[PDF Export] Processed photo: ${file.originalFilename} -> ${photoPath}`);
-                    }
-                }
-            } else {
-                console.log(`[PDF Export] No photos found in request`);
-            }
-        } catch (fileErr) {
-            console.error('[PDF Export] Photo handling error:', fileErr);
-            tempFiles.forEach(safeUnlink);
-            return res.status(500).json({ status: 'error', message: 'Failed to process uploaded photos.' });
+        const rows = response.data.values;
+        if (!rows || rows.length <= 1) {
+            console.error('[PDF Export] No data found in FilterTester sheet');
+            return res.status(404).json({ status: 'error', message: 'No completed checklists found' });
         }
 
-        // Use os.tmpdir() instead of /tmp for better compatibility
-        const pdfPath = path.join(os.tmpdir(), `Checklist_${checklist.ChecklistID || Date.now()}.pdf`);
-        console.log(`[PDF Export] PDF will be generated at: ${pdfPath}`);
-        console.log(`[PDF Export] Processing ${photos.length} photos`);
-        let pdfGenerated = false;
-        try {
-            console.log(`[PDF Export] Starting PDF generation...`);
-            await generateChecklistPDF(checklist, photos, pdfPath);
-            pdfGenerated = true;
-            console.log(`[PDF Export] PDF generated successfully`);
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename=Checklist_${checklist.ChecklistID || 'export'}.pdf`);
-            const stream = fs.createReadStream(pdfPath);
-            stream.on('error', (streamErr) => {
-                console.error('[PDF Export] Stream error:', streamErr);
-                if (!res.headersSent) {
-                    res.status(500).json({ status: 'error', message: 'Failed to read generated PDF.' });
-                } else {
-                    res.end();
-                }
-            });
-            stream.on('close', () => {
-                // Cleanup after streaming finishes
-                safeUnlink(pdfPath);
-                tempFiles.forEach(safeUnlink);
-                const ms = Date.now() - startTime;
-                console.log(`[PDF Export] PDF export completed in ${ms}ms (ChecklistID=${checklist.ChecklistID})`);
-            });
-            stream.pipe(res);
-        } catch (pdfErr) {
-            console.error('[PDF Export] PDF generation error:', pdfErr);
-            console.error('[PDF Export] Error stack:', pdfErr.stack);
-            if (!res.headersSent) {
-                res.status(500).json({ status: 'error', message: 'PDF generation failed.', error: pdfErr.message });
-            }
-            // cleanup even on failure
-            if (!pdfGenerated) safeUnlink(pdfPath);
-            tempFiles.forEach(safeUnlink);
+        // Find the checklist by ID
+        const headers = rows[0];
+        console.log(`[PDF Export] Sheet headers:`, headers);
+        
+        const checklistRow = rows.find(row => row[0] === checklistId); // Assuming ChecklistID is in first column
+        if (!checklistRow) {
+            console.error(`[PDF Export] Checklist not found: ${checklistId}`);
+            return res.status(404).json({ status: 'error', message: `Checklist ${checklistId} not found in completed records` });
         }
-    });
+
+        console.log(`[PDF Export] Found checklist data:`, checklistRow);
+
+        // Convert row data to checklist object
+        const checklist = {};
+        headers.forEach((header, index) => {
+            if (header && checklistRow[index] !== undefined) {
+                checklist[header] = checklistRow[index];
+            }
+        });
+
+        console.log(`[PDF Export] Converted checklist object:`, JSON.stringify(checklist, null, 2));
+
+        // Enhance checklist data with proper field mapping
+        const enhancedChecklist = {
+            ...checklist,
+            ChecklistID: checklist.ChecklistID || checklist.checklistId || checklistId,
+            CustomerName: checklist.CustomerName || checklist.Customer || checklist.customerName || 'Unknown Customer',
+            TechnicianName: checklist.TechnicianName || checklist.Technician || checklist.technicianName || 'Unknown Technician',
+            Date: checklist.Date || checklist.date || new Date().toLocaleDateString(),
+            Model: checklist.Model || checklist.model || checklist.EquipmentModel || 'Not specified',
+            SerialNumber: checklist.SerialNumber || checklist.serialNumber || checklist.Serial || 'Not specified',
+            Location: checklist.Location || checklist.location || 'Not specified'
+        };
+
+        console.log(`[PDF Export] Enhanced checklist data:`, JSON.stringify(enhancedChecklist, null, 2));
+
+        // For now, no photos since they're not stored in sheets
+        // TODO: Implement photo retrieval if photos are stored separately
+        const photos = [];
+
+        // Generate PDF
+        const pdfPath = path.join(os.tmpdir(), `Checklist_${checklistId}_${Date.now()}.pdf`);
+        console.log(`[PDF Export] Generating PDF at: ${pdfPath}`);
+
+        await generateChecklistPDF(enhancedChecklist, photos, pdfPath);
+        console.log(`[PDF Export] PDF generated successfully`);
+
+        // Stream PDF to response
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=Checklist_${checklistId}.pdf`);
+        
+        const stream = fs.createReadStream(pdfPath);
+        stream.on('error', (streamErr) => {
+            console.error('[PDF Export] Stream error:', streamErr);
+            if (!res.headersSent) {
+                res.status(500).json({ status: 'error', message: 'Failed to read generated PDF.' });
+            } else {
+                res.end();
+            }
+            safeUnlink(pdfPath);
+        });
+        
+        stream.on('close', () => {
+            safeUnlink(pdfPath);
+            const ms = Date.now() - startTime;
+            console.log(`[PDF Export] PDF export completed in ${ms}ms (ChecklistID=${checklistId})`);
+        });
+        
+        stream.pipe(res);
+
+    } catch (error) {
+        console.error('[PDF Export] Error fetching checklist data:', error);
+        console.error('[PDF Export] Error stack:', error.stack);
+        if (!res.headersSent) {
+            res.status(500).json({ 
+                status: 'error', 
+                message: 'Failed to fetch checklist data from sheet',
+                error: error.message 
+            });
+        }
+    }
 };
