@@ -3,6 +3,7 @@ const { google } = require('googleapis');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const formidable = require('formidable');
 
 // Utility: safely unlink a file if it exists
 function safeUnlink(filePath) {
@@ -15,6 +16,13 @@ async function parseBody(req) {
     if (req.body !== undefined) {
         console.log('[PDF Export] Body already parsed by framework:', req.body);
         return req.body;
+    }
+    
+    // Check if it's multipart/form-data
+    const contentType = req.headers['content-type'] || '';
+    if (contentType.includes('multipart/form-data')) {
+        console.log('[PDF Export] Detected multipart/form-data, using formidable...');
+        return parseMultipartForm(req);
     }
     
     return new Promise((resolve) => {
@@ -39,6 +47,37 @@ async function parseBody(req) {
                 console.log('[PDF Export] URL encoded result:', result);
                 resolve(result);
             }
+        });
+    });
+}
+
+// Utility: parse multipart form data
+async function parseMultipartForm(req) {
+    return new Promise((resolve, reject) => {
+        const form = formidable({
+            multiples: true,
+            keepExtensions: true
+        });
+        
+        form.parse(req, (err, fields, files) => {
+            if (err) {
+                console.log('[PDF Export] Formidable parse error:', err);
+                resolve({});
+                return;
+            }
+            
+            console.log('[PDF Export] Formidable fields:', fields);
+            console.log('[PDF Export] Formidable files:', Object.keys(files));
+            
+            // Flatten the fields (formidable returns arrays)
+            const flatFields = {};
+            Object.keys(fields).forEach(key => {
+                const value = fields[key];
+                flatFields[key] = Array.isArray(value) ? value[0] : value;
+            });
+            
+            console.log('[PDF Export] Flattened fields:', flatFields);
+            resolve(flatFields);
         });
     });
 }
