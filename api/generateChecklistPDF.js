@@ -57,33 +57,53 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                          .text('EQUIPMENT INFORMATION', 50, startY);
                      drawBox(50, startY + 25, 495, 2, primaryColor);
                      // Equipment details in a nice grid
-                     const fields = [
-                          { label: 'Customer Name', value: checklist.CustomerName || 'Not specified' },
-                          { label: 'Equipment Model', value: checklist.MachineType || 'Not specified' },
-                          { label: 'Serial Number', value: checklist.SerialNo || 'Not specified' },
-                          { label: 'Technician', value: checklist.TechnicianName || 'Not specified' },
-                          { label: 'Date', value: checklist.Date || new Date().toLocaleDateString() },
-                          { label: 'Location', value: checklist.Country || 'Not specified' }
-                     ];
-                     let currentY = startY + 40;
-                     for (let i = 0; i < fields.length; i += 2) {
-                          // Left column
-                          drawBox(50, currentY, 240, 30, lightGray);
-                          doc.fontSize(8).font('Helvetica-Bold').fillColor(secondaryColor)
-                              .text(fields[i].label.toUpperCase(), 60, currentY + 4);
-                          doc.fontSize(9).font('Helvetica').fillColor('#1f2937')
-                              .text(fields[i].value, 60, currentY + 14);
-                          // Right column (if exists)
-                          if (fields[i + 1]) {
-                                drawBox(305, currentY, 240, 30, lightGray);
-                                doc.fontSize(8).font('Helvetica-Bold').fillColor(secondaryColor)
-                                    .text(fields[i + 1].label.toUpperCase(), 315, currentY + 4);
-                                doc.fontSize(9).font('Helvetica').fillColor('#1f2937')
-                                    .text(fields[i + 1].value, 315, currentY + 14);
-                          }
-                          currentY += 35;
-                     }
-                     return currentY;
+                    // Always show these fields in this order
+                    const fields = [
+                        { label: 'Customer', value: checklist.CustomerName || 'Not specified' },
+                        { label: 'Location', value: checklist.Country || 'Not specified' },
+                        { label: 'Equipment Model', value: checklist.MachineType || 'Not specified' },
+                        { label: 'Serial Number', value: checklist.SerialNo || 'Not specified' },
+                    ];
+                    // Add technician and date below
+                    const extraFields = [
+                        { label: 'Technician', value: checklist.TechnicianName || 'Not specified' },
+                        { label: 'Date', value: checklist.Date || new Date().toLocaleDateString() }
+                    ];
+                         let currentY = startY + 40;
+                         for (let i = 0; i < fields.length; i += 2) {
+                              // Left column
+                              drawBox(50, currentY, 240, 30, lightGray);
+                              doc.fontSize(8).font('Helvetica-Bold').fillColor(secondaryColor)
+                                  .text(fields[i].label.toUpperCase(), 60, currentY + 4);
+                              doc.fontSize(9).font('Helvetica').fillColor('#1f2937')
+                                  .text(fields[i].value, 60, currentY + 14);
+                              // Right column (if exists)
+                              if (fields[i + 1]) {
+                                    drawBox(305, currentY, 240, 30, lightGray);
+                                    doc.fontSize(8).font('Helvetica-Bold').fillColor(secondaryColor)
+                                        .text(fields[i + 1].label.toUpperCase(), 315, currentY + 4);
+                                    doc.fontSize(9).font('Helvetica').fillColor('#1f2937')
+                                        .text(fields[i + 1].value, 315, currentY + 14);
+                              }
+                              currentY += 35;
+                         }
+                         // Extra fields (technician, date)
+                         for (let i = 0; i < extraFields.length; i += 2) {
+                              drawBox(50, currentY, 240, 30, lightGray);
+                              doc.fontSize(8).font('Helvetica-Bold').fillColor(secondaryColor)
+                                  .text(extraFields[i].label.toUpperCase(), 60, currentY + 4);
+                              doc.fontSize(9).font('Helvetica').fillColor('#1f2937')
+                                  .text(extraFields[i].value, 60, currentY + 14);
+                              if (extraFields[i + 1]) {
+                                    drawBox(305, currentY, 240, 30, lightGray);
+                                    doc.fontSize(8).font('Helvetica-Bold').fillColor(secondaryColor)
+                                        .text(extraFields[i + 1].label.toUpperCase(), 315, currentY + 4);
+                                    doc.fontSize(9).font('Helvetica').fillColor('#1f2937')
+                                        .text(extraFields[i + 1].value, 315, currentY + 14);
+                              }
+                              currentY += 35;
+                         }
+                         return currentY;
             }
             
             function drawChecklistItems(startY) {
@@ -158,7 +178,7 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                             statusText = codes.map(code => codeMap[code] || code).join(', ');
                         }
                     }
-                    doc.fontSize(8).font('Helvetica-Bold').fillColor('#1f2937')
+                        doc.fontSize(8).font('Helvetica-Bold').fillColor('#1f2937')
                        .text(statusText, 300, currentY + 4, { width: 90 })
                        .text(resultText || 'N/A', 400, currentY + 4, { width: 130 });
                     currentY += 20;

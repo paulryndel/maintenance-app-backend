@@ -52,33 +52,6 @@ async function parseBody(req) {
     });
 }
 
-// Utility: parse multipart form data
-async function parseMultipartForm(req) {
-    return new Promise((resolve, reject) => {
-        const form = new IncomingForm({
-            multiples: true,
-            keepExtensions: true
-        });
-        form.parse(req, (err, fields, files) => {
-            if (err) {
-                console.log('[PDF Export] Formidable parse error:', err);
-                resolve({});
-                return;
-            }
-            console.log('[PDF Export] Formidable fields:', fields);
-            console.log('[PDF Export] Formidable files:', Object.keys(files));
-            // Flatten the fields (formidable returns arrays)
-            const flatFields = {};
-            Object.keys(fields).forEach(key => {
-                const value = fields[key];
-                flatFields[key] = Array.isArray(value) ? value[0] : value;
-            });
-            console.log('[PDF Export] Flattened fields:', flatFields);
-            resolve(flatFields);
-        });
-    });
-}
-
 // Enable JSON body parsing for this endpoint
 module.exports.config = {
     api: {
