@@ -162,17 +162,22 @@ module.exports = async (req, res) => {
         if (!checklistId && req.body?.checklist) {
             try {
                 let checklistData = req.body.checklist;
+                console.log('[PDF Export] DEBUG: req.body.checklist type:', typeof checklistData);
+                console.log('[PDF Export] DEBUG: req.body.checklist value:', checklistData);
                 if (typeof checklistData === 'string') {
                     try {
                         checklistData = JSON.parse(checklistData);
+                        console.log('[PDF Export] DEBUG: checklistData parsed as JSON:', checklistData);
                     } catch (e) {
                         // fallback: treat as URL-encoded string
                         const urlencoded = new URLSearchParams(checklistData);
                         checklistData = Object.fromEntries(urlencoded);
+                        console.log('[PDF Export] DEBUG: checklistData parsed as URL-encoded:', checklistData);
                     }
                 }
                 // Try all possible key casings and names
                 checklistId = checklistData?.ChecklistID || checklistData?.checklistId || checklistData?.id || checklistData?.ID;
+                console.log('[PDF Export] DEBUG: checklistId after direct extraction:', checklistId);
                 // Fallback: search for any key containing 'id'
                 if (!checklistId && typeof checklistData === 'object') {
                     const possibleIds = Object.entries(checklistData).find(([key, value]) =>
@@ -183,6 +188,7 @@ module.exports = async (req, res) => {
                         console.log(`[PDF Export] Using fallback ID from nested checklist field '${possibleIds[0]}': ${checklistId}`);
                     }
                 }
+                console.log('[PDF Export] DEBUG: checklistId after fallback extraction:', checklistId);
             } catch (e) {
                 console.log('[PDF Export] Failed to parse nested checklist data:', e.message);
             }
