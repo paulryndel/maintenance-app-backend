@@ -270,10 +270,33 @@ module.exports = async (req, res) => {
         console.log(`[PDF Export] Converted checklist object:`, JSON.stringify(checklist, null, 2));
 
         // Enhance checklist data with proper field mapping
+        // Fetch CustomerName from CustomerList sheet if CustomerID is present
+        let customerName = checklist.CustomerName || checklist.Customer || checklist.customerName || checklist['Customer Name'] || '';
+        if (checklist.CustomerID) {
+            try {
+                const customerListResp = await sheets.spreadsheets.values.get({
+                    auth,
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: 'CustomerList!A:ZZ',
+                });
+                const customerRows = customerListResp.data.values;
+                if (customerRows && customerRows.length > 1) {
+                    const customerHeaders = customerRows[0];
+                    const idIdx = customerHeaders.findIndex(h => h.trim().toLowerCase() === 'customerid');
+                    const nameIdx = customerHeaders.findIndex(h => h.trim().toLowerCase().includes('name'));
+                    const found = customerRows.find((row, idx) => idx > 0 && row[idIdx] === checklist.CustomerID);
+                    if (found && nameIdx !== -1) {
+                        customerName = found[nameIdx];
+                    }
+                }
+            } catch (e) {
+                console.error('[PDF Export] Failed to fetch CustomerList sheet:', e);
+            }
+        }
         const enhancedChecklist = {
             ...checklist,
             ChecklistID: checklist.ChecklistID || checklist.checklistId || checklistId,
-            CustomerName: checklist.CustomerName || checklist.Customer || checklist.customerName || checklist['Customer Name'] || 'Unknown Customer',
+            CustomerName: customerName || 'Unknown Customer',
             MachineType: checklist.MachineType || checklist['Equipment Model'] || checklist.Model || checklist.EquipmentModel || 'Not specified',
             SerialNo: checklist.SerialNo || checklist['Serial Number'] || checklist.SerialNumber || checklist.Serial || 'Not specified',
             Country: checklist.Country || checklist.Location || checklist.location || 'Not specified',
@@ -287,6 +310,7 @@ module.exports = async (req, res) => {
         // Extract status and photos from JSON fields, and download photos
         const photos = [];
         const fetch = require('node-fetch');
+        const photoSet = new Set();
         for (const [key, value] of Object.entries(enhancedChecklist)) {
             let parsed = value;
             // Try to parse JSON if value looks like an object
@@ -298,6 +322,8 @@ module.exports = async (req, res) => {
             // If parsed object has photos, download them
             if (parsed && typeof parsed === 'object' && Array.isArray(parsed.photos)) {
                 for (const url of parsed.photos) {
+                    if (photoSet.has(url)) continue;
+                    photoSet.add(url);
                     try {
                         const fileIdMatch = url.match(/fileId=([^&]+)/);
                         const fileId = fileIdMatch ? fileIdMatch[1] : Date.now();

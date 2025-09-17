@@ -40,58 +40,50 @@ function generateChecklistPDF(checklist, photos, outputPath) {
             }
             
             function drawHeader() {
-                // Header background
-                drawBox(50, 50, 495, 80, primaryColor);
-                
-                // Title
-                doc.fontSize(28).font('Helvetica-Bold').fillColor('white')
-                   .text('MAINTENANCE CHECKLIST', 60, 75, { align: 'center', width: 475 });
-                   
-                doc.fontSize(12).font('Helvetica').fillColor('white')
-                   .text(`Report ID: ${checklist.ChecklistID}`, 60, 105, { align: 'center', width: 475 });
+                     // Header background
+                     drawBox(50, 50, 495, 80, primaryColor);
+                     // Title
+                     doc.fontSize(18).font('Helvetica-Bold').fillColor('white')
+                         .text('MAINTENANCE CHECKLIST', 60, 75, { align: 'center', width: 475 });
+                     doc.fontSize(9).font('Helvetica').fillColor('white')
+                         .text(`Report ID: ${checklist.ChecklistID}`, 60, 105, { align: 'center', width: 475 });
             }
             
             function drawEquipmentInfo() {
                 const startY = 160;
                 
                 // Section header
-                doc.fontSize(18).font('Helvetica-Bold').fillColor(primaryColor)
-                   .text('EQUIPMENT INFORMATION', 50, startY);
-                   
-                drawBox(50, startY + 25, 495, 2, primaryColor);
-                
-                // Equipment details in a nice grid
-                const fields = [
-                    { label: 'Customer Name', value: checklist.CustomerName || 'Not specified' },
-                    { label: 'Equipment Model', value: checklist.MachineType || 'Not specified' },
-                    { label: 'Serial Number', value: checklist.SerialNo || 'Not specified' },
-                    { label: 'Technician', value: checklist.TechnicianName || 'Not specified' },
-                    { label: 'Date', value: checklist.Date || new Date().toLocaleDateString() },
-                    { label: 'Location', value: checklist.Country || 'Not specified' }
-                ];
-                
-                let currentY = startY + 40;
-                for (let i = 0; i < fields.length; i += 2) {
-                    // Left column
-                    drawBox(50, currentY, 240, 40, lightGray);
-                    doc.fontSize(10).font('Helvetica-Bold').fillColor(secondaryColor)
-                       .text(fields[i].label.toUpperCase(), 60, currentY + 8);
-                    doc.fontSize(12).font('Helvetica').fillColor('#1f2937')
-                       .text(fields[i].value, 60, currentY + 22);
-                    
-                    // Right column (if exists)
-                    if (fields[i + 1]) {
-                        drawBox(305, currentY, 240, 40, lightGray);
-                        doc.fontSize(10).font('Helvetica-Bold').fillColor(secondaryColor)
-                           .text(fields[i + 1].label.toUpperCase(), 315, currentY + 8);
-                        doc.fontSize(12).font('Helvetica').fillColor('#1f2937')
-                           .text(fields[i + 1].value, 315, currentY + 22);
-                    }
-                    
-                    currentY += 50;
-                }
-                
-                return currentY;
+                     doc.fontSize(12).font('Helvetica-Bold').fillColor(primaryColor)
+                         .text('EQUIPMENT INFORMATION', 50, startY);
+                     drawBox(50, startY + 25, 495, 2, primaryColor);
+                     // Equipment details in a nice grid
+                     const fields = [
+                          { label: 'Customer Name', value: checklist.CustomerName || 'Not specified' },
+                          { label: 'Equipment Model', value: checklist.MachineType || 'Not specified' },
+                          { label: 'Serial Number', value: checklist.SerialNo || 'Not specified' },
+                          { label: 'Technician', value: checklist.TechnicianName || 'Not specified' },
+                          { label: 'Date', value: checklist.Date || new Date().toLocaleDateString() },
+                          { label: 'Location', value: checklist.Country || 'Not specified' }
+                     ];
+                     let currentY = startY + 40;
+                     for (let i = 0; i < fields.length; i += 2) {
+                          // Left column
+                          drawBox(50, currentY, 240, 30, lightGray);
+                          doc.fontSize(8).font('Helvetica-Bold').fillColor(secondaryColor)
+                              .text(fields[i].label.toUpperCase(), 60, currentY + 4);
+                          doc.fontSize(9).font('Helvetica').fillColor('#1f2937')
+                              .text(fields[i].value, 60, currentY + 14);
+                          // Right column (if exists)
+                          if (fields[i + 1]) {
+                                drawBox(305, currentY, 240, 30, lightGray);
+                                doc.fontSize(8).font('Helvetica-Bold').fillColor(secondaryColor)
+                                    .text(fields[i + 1].label.toUpperCase(), 315, currentY + 4);
+                                doc.fontSize(9).font('Helvetica').fillColor('#1f2937')
+                                    .text(fields[i + 1].value, 315, currentY + 14);
+                          }
+                          currentY += 35;
+                     }
+                     return currentY;
             }
             
             function drawChecklistItems(startY) {
@@ -110,11 +102,11 @@ function generateChecklistPDF(checklist, photos, outputPath) {
 
                 // Table header
                 drawBox(50, currentY, 495, 30, lightGray);
-                doc.fontSize(12).font('Helvetica-Bold').fillColor(primaryColor)
-                   .text('Item', 60, currentY + 8)
-                   .text('Status', 300, currentY + 8)
-                   .text('Result', 400, currentY + 8);
-                currentY += 35;
+                     doc.fontSize(9).font('Helvetica-Bold').fillColor(primaryColor)
+                         .text('Item', 60, currentY + 8)
+                         .text('Status', 300, currentY + 8)
+                         .text('Result', 400, currentY + 8);
+                     currentY += 25;
 
                 // Process checklist items
                 Object.entries(checklist).forEach(([key, value]) => {
@@ -136,10 +128,10 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                         currentY = 50;
                     }
                     // Item box with fixed height
-                    drawBox(50, currentY, 495, 30, '#ffffff');
+                    drawBox(50, currentY, 495, 20, '#ffffff');
                     // Item label
-                    doc.fontSize(11).font('Helvetica').fillColor('#374151')
-                       .text(formatFieldName(key), 60, currentY + 8, { width: 180 });
+                    doc.fontSize(8).font('Helvetica').fillColor('#374151')
+                       .text(formatFieldName(key), 60, currentY + 4, { width: 180 });
                     // Status and Result columns
                     let statusText = 'N/A';
                     let resultText = '';
@@ -166,10 +158,10 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                             statusText = codes.map(code => codeMap[code] || code).join(', ');
                         }
                     }
-                    doc.fontSize(11).font('Helvetica-Bold').fillColor('#1f2937')
-                       .text(statusText, 300, currentY + 8, { width: 90 })
-                       .text(resultText || 'N/A', 400, currentY + 8, { width: 130 });
-                    currentY += 32;
+                    doc.fontSize(8).font('Helvetica-Bold').fillColor('#1f2937')
+                       .text(statusText, 300, currentY + 4, { width: 90 })
+                       .text(resultText || 'N/A', 400, currentY + 4, { width: 130 });
+                    currentY += 20;
                 });
                 
                 // If no checklist items were found, show a message
