@@ -23,7 +23,18 @@ async function parseBody(req) {
     const contentType = req.headers['content-type'] || '';
     if (contentType.includes('multipart/form-data')) {
         console.log('[PDF Export] Detected multipart/form-data, using formidable...');
-        return parseMultipartForm(req);
+        return new Promise((resolve, reject) => {
+            const form = new IncomingForm();
+            form.parse(req, (err, fields, files) => {
+                if (err) {
+                    console.error('[PDF Export] Formidable parse error:', err);
+                    reject(err);
+                } else {
+                    // Only return fields, not files, for checklist export
+                    resolve(fields);
+                }
+            });
+        });
     }
     
     return new Promise((resolve) => {
