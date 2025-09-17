@@ -50,6 +50,7 @@ module.exports = async (req, res) => {
     const startTime = Date.now();
     console.log(`[PDF Export] Starting export request at ${new Date().toISOString()}`);
     console.log(`[PDF Export] Method: ${req.method}`);
+    console.log(`[PDF Export] Headers:`, req.headers);
     
     if (req.method !== 'GET' && req.method !== 'POST') {
         console.log(`[PDF Export] Method not allowed: ${req.method}`);
@@ -61,18 +62,59 @@ module.exports = async (req, res) => {
     // Handle both GET and POST methods
     if (req.method === 'GET') {
         checklistId = req.query.checklistId;
+        console.log(`[PDF Export] GET query params:`, req.query);
         if (!checklistId) {
             console.error('[PDF Export] Missing checklistId parameter in GET request');
             return res.status(400).json({ status: 'error', message: 'Missing required parameter: checklistId' });
         }
     } else if (req.method === 'POST') {
-        // Handle POST request - try to extract checklistId from body
-        checklistId = req.body?.checklistId || req.body?.ChecklistID;
+        // Handle POST request - try to extract checklistId from multiple possible sources
+        console.log('[PDF Export] POST body type:', typeof req.body);
+        console.log('[PDF Export] POST body received:', JSON.stringify(req.body, null, 2));
+        console.log('[PDF Export] POST body keys:', Object.keys(req.body || {}));
+        
+        checklistId = req.body?.checklistId || 
+                     req.body?.ChecklistID || 
+                     req.body?.id || 
+                     req.body?.ID ||
+                     req.body?.checklist?.ChecklistID ||
+                     req.body?.checklist?.checklistId ||
+                     req.body?.checklist?.id;
+        
+        // If still no checklistId found, try to extract from nested data
+        if (!checklistId && req.body?.checklist) {
+            try {
+                const checklistData = typeof req.body.checklist === 'string' 
+                    ? JSON.parse(req.body.checklist) 
+                    : req.body.checklist;
+                checklistId = checklistData?.ChecklistID || checklistData?.checklistId || checklistData?.id;
+            } catch (e) {
+                console.log('[PDF Export] Failed to parse nested checklist data:', e.message);
+            }
+        }
+        
+        // If still no ID, try to find any field that looks like an ID
+        if (!checklistId) {
+            const possibleIds = Object.entries(req.body).find(([key, value]) => 
+                key.toLowerCase().includes('id') && value && typeof value === 'string'
+            );
+            if (possibleIds) {
+                checklistId = possibleIds[1];
+                console.log(`[PDF Export] Using fallback ID from field '${possibleIds[0]}': ${checklistId}`);
+            }
+        }
+        
+        console.log(`[PDF Export] Extracted checklistId: ${checklistId}`);
+        
         if (!checklistId) {
             console.error('[PDF Export] Missing checklistId in POST body');
+            console.error('[PDF Export] Available fields in body:', Object.keys(req.body));
             return res.status(400).json({ 
                 status: 'error', 
-                message: 'Missing required field: checklistId or ChecklistID in request body' 
+                message: 'Missing required field: checklistId. Please include checklistId in the request body.',
+                receivedFields: Object.keys(req.body || {}),
+                receivedData: req.body,
+                hint: 'Send as: {"checklistId": "YOUR_CHECKLIST_ID"}'
             });
         }
     }
