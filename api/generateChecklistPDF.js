@@ -103,6 +103,7 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                 
                 let currentY = startY + 40;
                 let photoRefIndex = 1;
+                let itemCount = 0;
                 
                 // Process checklist items
                 Object.entries(checklist).forEach(([key, value]) => {
@@ -110,6 +111,13 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                     if (['ChecklistID', 'CustomerID', 'TechnicianID', 'CustomerName', 'Model', 'SerialNumber', 'TechnicianName', 'Date', 'Location'].includes(key)) {
                         return;
                     }
+                    
+                    // Skip empty or null values
+                    if (value === null || value === undefined || value === '') {
+                        return;
+                    }
+                    
+                    itemCount++;
                     
                     // Check if we need a new page
                     if (currentY > 700) {
@@ -139,7 +147,7 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                     }
                     
                     doc.fontSize(11).font('Helvetica').fillColor(valueColor)
-                       .text(itemValue || 'Not checked', 60, currentY + 28, { width: 420 });
+                       .text(itemValue.toString() || 'Not checked', 60, currentY + 28, { width: 420 });
                     
                     // Add checkbox or status indicator
                     if (typeof value === 'boolean') {
@@ -157,6 +165,22 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                     
                     currentY += 50;
                 });
+                
+                // If no checklist items were found, show a message
+                if (itemCount === 0) {
+                    drawBox(50, currentY, 495, 60, '#f9fafb');
+                    doc.fontSize(14).font('Helvetica-Oblique').fillColor('#9ca3af')
+                       .text('No checklist items found in the submitted data.', 60, currentY + 20, { 
+                           width: 475, 
+                           align: 'center' 
+                       });
+                    doc.fontSize(12).font('Helvetica').fillColor('#6b7280')
+                       .text('Please ensure checklist data is properly submitted with the request.', 60, currentY + 40, { 
+                           width: 475, 
+                           align: 'center' 
+                       });
+                    currentY += 70;
+                }
                 
                 return currentY;
             }

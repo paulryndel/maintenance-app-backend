@@ -41,12 +41,14 @@ module.exports = async (req, res) => {
         console.log(`[PDF Export] Form parsing completed`);
         console.log(`[PDF Export] Fields received:`, Object.keys(fields));
         console.log(`[PDF Export] Files received:`, Object.keys(files));
+        console.log(`[PDF Export] Raw fields data:`, fields);
+        console.log(`[PDF Export] Raw files data:`, files);
         if (err) {
             console.error('[PDF Export] Form parse error:', err);
             return res.status(400).json({ status: 'error', message: 'Form parse error.' });
         }
 
-        let checklistRaw = fields.checklist || '{}';
+        let checklistRaw = fields.checklist || fields.data || fields.checklistData || '{}';
         // Handle case where formidable returns an array
         if (Array.isArray(checklistRaw)) {
             checklistRaw = checklistRaw[0] || '{}';
@@ -59,34 +61,75 @@ module.exports = async (req, res) => {
         } catch (e) {
             console.error('[PDF Export] JSON parse error:', e);
             console.error('[PDF Export] Raw checklist data:', checklistRaw);
-            return res.status(400).json({ status: 'error', message: 'Invalid checklist JSON.' });
+            
+            // Try to create a basic checklist from individual fields if JSON parsing fails
+            console.log('[PDF Export] Attempting to create checklist from individual fields...');
+            checklist = {};
+            
+            // Extract basic fields from form data
+            Object.keys(fields).forEach(key => {
+                if (key !== 'checklist' && key !== 'data' && key !== 'checklistData') {
+                    let value = fields[key];
+                    if (Array.isArray(value)) value = value[0];
+                    checklist[key] = value;
+                }
+            });
+            
+            console.log(`[PDF Export] Reconstructed checklist:`, JSON.stringify(checklist, null, 2));
+            
+            if (Object.keys(checklist).length === 0) {
+                return res.status(400).json({ status: 'error', message: 'Invalid checklist data and no individual fields found.' });
+            }
         }
 
         // More flexible field validation - check for variations of field names
         const checklistId = checklist.ChecklistID || checklist.checklistId || checklist.id || checklist.ID || `PDF-${Date.now()}`;
-        const customerId = checklist.CustomerID || checklist.customerId || checklist.customer || checklist.Customer || 'Unknown';
-        const technicianId = checklist.TechnicianID || checklist.technicianId || checklist.technician || checklist.Technician || 'Unknown';
+        const customerId = checklist.CustomerID || checklist.customerId || checklist.customer || checklist.Customer || checklist.customerName || 'Unknown Customer';
+        const technicianId = checklist.TechnicianID || checklist.technicianId || checklist.technician || checklist.Technician || checklist.technicianName || 'Unknown Technician';
         
-        // Update checklist with normalized field names
+        // Add additional fields that might be missing
         checklist.ChecklistID = checklistId;
         checklist.CustomerID = customerId;
         checklist.TechnicianID = technicianId;
+        checklist.CustomerName = checklist.CustomerName || checklist.customerName || customerId;
+        checklist.TechnicianName = checklist.TechnicianName || checklist.technicianName || technicianId;
+        checklist.Date = checklist.Date || checklist.date || new Date().toLocaleDateString();
         
-        console.log(`[PDF Export] Normalized IDs - Checklist: ${checklistId}, Customer: ${customerId}, Technician: ${technicianId}`);
+        console.log(`[PDF Export] Normalized data:`, {
+            ChecklistID: checklistId,
+            CustomerName: checklist.CustomerName,
+            TechnicianName: checklist.TechnicianName,
+            Date: checklist.Date,
+            totalFields: Object.keys(checklist).length
+        });
 
         // Uploaded photos processing
         const photos = [];
         const tempFiles = []; // track to cleanup
         try {
-            if (files.photos) {
-                const photoFiles = Array.isArray(files.photos) ? files.photos : [files.photos];
+            // Check for photos in different possible field names
+            const photoFields = files.photos || files.images || files.attachments || [];
+            console.log(`[PDF Export] Photo fields found:`, photoFields);
+            
+            if (photoFields && photoFields.length > 0) {
+                const photoFiles = Array.isArray(photoFields) ? photoFields : [photoFields];
+                console.log(`[PDF Export] Processing ${photoFiles.length} photo files`);
+                
                 for (const file of photoFiles) {
-                    // Use os.tmpdir() for better cross-platform compatibility
-                    const photoPath = path.join(os.tmpdir(), file.newFilename);
-                    fs.renameSync(file.filepath, photoPath);
-                    photos.push({ url: photoPath, description: file.originalFilename });
-                    tempFiles.push(photoPath);
+                    if (file && file.filepath) {
+                        // Use os.tmpdir() for better cross-platform compatibility
+                        const photoPath = path.join(os.tmpdir(), file.newFilename || `photo_${Date.now()}.jpg`);
+                        fs.renameSync(file.filepath, photoPath);
+                        photos.push({ 
+                            url: photoPath, 
+                            description: file.originalFilename || `Photo ${photos.length + 1}` 
+                        });
+                        tempFiles.push(photoPath);
+                        console.log(`[PDF Export] Processed photo: ${file.originalFilename} -> ${photoPath}`);
+                    }
                 }
+            } else {
+                console.log(`[PDF Export] No photos found in request`);
             }
         } catch (fileErr) {
             console.error('[PDF Export] Photo handling error:', fileErr);
