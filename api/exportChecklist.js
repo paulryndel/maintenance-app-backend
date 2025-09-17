@@ -10,6 +10,15 @@ function safeUnlink(filePath) {
     fs.promises.unlink(filePath).catch(() => {/* ignore */});
 }
 
+// Enable JSON body parsing for this endpoint
+module.exports.config = {
+    api: {
+        bodyParser: {
+            sizeLimit: '1mb',
+        },
+    },
+};
+
 // Google Sheets configuration (same as main app)
 const sheets = google.sheets('v4');
 const SHEET_NAMES = {
@@ -40,16 +49,32 @@ async function getAuthClient() {
 module.exports = async (req, res) => {
     const startTime = Date.now();
     console.log(`[PDF Export] Starting export request at ${new Date().toISOString()}`);
+    console.log(`[PDF Export] Method: ${req.method}`);
     
-    if (req.method !== 'GET') {
+    if (req.method !== 'GET' && req.method !== 'POST') {
         console.log(`[PDF Export] Method not allowed: ${req.method}`);
-        return res.status(405).send('Method Not Allowed - Use GET with checklistId parameter');
+        return res.status(405).send('Method Not Allowed - Use GET with checklistId parameter or POST');
     }
 
-    const checklistId = req.query.checklistId;
-    if (!checklistId) {
-        console.error('[PDF Export] Missing checklistId parameter');
-        return res.status(400).json({ status: 'error', message: 'Missing required parameter: checklistId' });
+    let checklistId;
+    
+    // Handle both GET and POST methods
+    if (req.method === 'GET') {
+        checklistId = req.query.checklistId;
+        if (!checklistId) {
+            console.error('[PDF Export] Missing checklistId parameter in GET request');
+            return res.status(400).json({ status: 'error', message: 'Missing required parameter: checklistId' });
+        }
+    } else if (req.method === 'POST') {
+        // Handle POST request - try to extract checklistId from body
+        checklistId = req.body?.checklistId || req.body?.ChecklistID;
+        if (!checklistId) {
+            console.error('[PDF Export] Missing checklistId in POST body');
+            return res.status(400).json({ 
+                status: 'error', 
+                message: 'Missing required field: checklistId or ChecklistID in request body' 
+            });
+        }
     }
 
     console.log(`[PDF Export] Fetching checklist data for ID: ${checklistId}`);
