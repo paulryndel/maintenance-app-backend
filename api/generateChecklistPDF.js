@@ -62,12 +62,12 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                 
                 // Equipment details in a nice grid
                 const fields = [
-                    { label: 'Customer Name', value: checklist.CustomerName || checklist.Customer || checklist['Customer Name'] || checklist.CustomerID || 'Not specified' },
-                    { label: 'Equipment Model', value: checklist.Model || checklist.EquipmentModel || checklist['Equipment Model'] || 'Not specified' },
-                    { label: 'Serial Number', value: checklist.SerialNumber || checklist.Serial || checklist['Serial Number'] || 'Not specified' },
-                    { label: 'Technician', value: checklist.TechnicianName || checklist.Technician || checklist['Technician Name'] || checklist.TechnicianID || 'Not specified' },
-                    { label: 'Date', value: checklist.Date || checklist['Date'] || new Date().toLocaleDateString() },
-                    { label: 'Location', value: checklist.Location || checklist['Location'] || 'Not specified' }
+                    { label: 'Customer Name', value: checklist.CustomerName || 'Not specified' },
+                    { label: 'Equipment Model', value: checklist.MachineType || 'Not specified' },
+                    { label: 'Serial Number', value: checklist.SerialNo || 'Not specified' },
+                    { label: 'Technician', value: checklist.TechnicianName || 'Not specified' },
+                    { label: 'Date', value: checklist.Date || new Date().toLocaleDateString() },
+                    { label: 'Location', value: checklist.Country || 'Not specified' }
                 ];
                 
                 let currentY = startY + 40;
@@ -119,8 +119,8 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                 Object.entries(checklist).forEach(([key, value]) => {
                     // Skip metadata fields
                     if ([
-                        'ChecklistID', 'CustomerID', 'TechnicianID', 'CustomerName', 'Model', 'SerialNumber',
-                        'TechnicianName', 'Date', 'Location', 'Review', 'Notes', 'Photos', 'Photo', 'Equipment Model', 'Serial Number', 'Technician', 'Customer'
+                        'ChecklistID', 'CustomerID', 'TechnicianID', 'CustomerName', 'MachineType', 'SerialNo',
+                        'TechnicianName', 'Date', 'Country', 'Review', 'Notes', 'Photos', 'Photo', 'Equipment Model', 'Serial Number', 'Technician', 'Customer', 'Location', 'Model', 'SerialNumber'
                     ].includes(key)) {
                         return;
                     }
@@ -140,14 +140,22 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                     doc.fontSize(11).font('Helvetica').fillColor('#374151')
                        .text(formatFieldName(key), 60, currentY + 8, { width: 320 });
                     // Result column
-                    let resultValue = value;
                     let resultText = '';
-                    if (typeof resultValue === 'string') {
-                        // Split by comma or space for multiple codes
-                        const codes = resultValue.split(/[, ]+/).filter(Boolean);
+                    let parsed = value;
+                    if (typeof value === 'string' && value.trim().startsWith('{')) {
+                        try {
+                            parsed = JSON.parse(value);
+                        } catch (e) { /* not JSON */ }
+                    }
+                    if (parsed && typeof parsed === 'object' && parsed.status) {
+                        // Support multiple codes in status (comma or space separated)
+                        const codes = parsed.status.split(/[, ]+/).filter(Boolean);
+                        resultText = codes.map(code => codeMap[code] || code).join(', ');
+                    } else if (typeof value === 'string') {
+                        const codes = value.split(/[, ]+/).filter(Boolean);
                         resultText = codes.map(code => codeMap[code] || code).join(', ');
                     } else {
-                        resultText = resultValue.toString();
+                        resultText = value.toString();
                     }
                     doc.fontSize(11).font('Helvetica-Bold').fillColor('#1f2937')
                        .text(resultText, 400, currentY + 8, { width: 130 });

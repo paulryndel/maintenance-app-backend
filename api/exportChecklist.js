@@ -273,35 +273,31 @@ module.exports = async (req, res) => {
         const enhancedChecklist = {
             ...checklist,
             ChecklistID: checklist.ChecklistID || checklist.checklistId || checklistId,
-            CustomerName: checklist.CustomerName || checklist.Customer || checklist.customerName || 'Unknown Customer',
+            CustomerName: checklist.CustomerName || checklist.Customer || checklist.customerName || checklist['Customer Name'] || 'Unknown Customer',
+            MachineType: checklist.MachineType || checklist['Equipment Model'] || checklist.Model || checklist.EquipmentModel || 'Not specified',
+            SerialNo: checklist.SerialNo || checklist['Serial Number'] || checklist.SerialNumber || checklist.Serial || 'Not specified',
+            Country: checklist.Country || checklist.Location || checklist.location || 'Not specified',
             TechnicianName: checklist.TechnicianName || checklist.Technician || checklist.technicianName || 'Unknown Technician',
             Date: checklist.Date || checklist.date || new Date().toLocaleDateString(),
-            Model: checklist.Model || checklist.model || checklist.EquipmentModel || 'Not specified',
-            SerialNumber: checklist.SerialNumber || checklist.serialNumber || checklist.Serial || 'Not specified',
-            Location: checklist.Location || checklist.location || 'Not specified'
         };
 
         console.log(`[PDF Export] Enhanced checklist data:`, JSON.stringify(enhancedChecklist, null, 2));
 
 
-        // Find and download photos referenced in checklist fields
+        // Extract status and photos from JSON fields, and download photos
         const photos = [];
         const fetch = require('node-fetch');
-
         for (const [key, value] of Object.entries(enhancedChecklist)) {
-            if (typeof value === 'string' && value.includes('/api/getImage?fileId=')) {
-                // Support multiple photos in a single field (JSON array or comma-separated)
-                let photoUrls = [];
+            let parsed = value;
+            // Try to parse JSON if value looks like an object
+            if (typeof value === 'string' && value.trim().startsWith('{')) {
                 try {
-                    if (value.trim().startsWith('[')) {
-                        photoUrls = JSON.parse(value);
-                    } else {
-                        photoUrls = value.split(',').map(v => v.trim());
-                    }
-                } catch (e) {
-                    photoUrls = [value];
-                }
-                for (const url of photoUrls) {
+                    parsed = JSON.parse(value);
+                } catch (e) { /* not JSON */ }
+            }
+            // If parsed object has photos, download them
+            if (parsed && typeof parsed === 'object' && Array.isArray(parsed.photos)) {
+                for (const url of parsed.photos) {
                     try {
                         const fileIdMatch = url.match(/fileId=([^&]+)/);
                         const fileId = fileIdMatch ? fileIdMatch[1] : Date.now();
@@ -314,7 +310,7 @@ module.exports = async (req, res) => {
                             resImg.body.on('error', reject);
                             dest.on('finish', resolve);
                         });
-                        photos.push({ url: imgPath, description: key });
+                        photos.push({ url: imgPath, description: `${key} (photo)` });
                     } catch (err) {
                         console.error(`[PDF Export] Failed to download photo for ${key}:`, err);
                     }
