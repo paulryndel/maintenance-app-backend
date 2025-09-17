@@ -103,14 +103,28 @@ module.exports = async (req, res) => {
         }
     } else if (req.method === 'POST') {
         req.body = await parseBody(req);
-        checklistId = req.body.checklistId || (req.body.checklist && (req.body.checklist.ChecklistID || req.body.checklist.checklistId || req.body.checklist.id));
+        checklistId = req.body.checklistId;
+        // If not found, try to extract from nested checklist (object or stringified JSON)
+        if (!checklistId && req.body.checklist) {
+            let nested = req.body.checklist;
+            if (typeof nested === 'string') {
+                try {
+                    nested = JSON.parse(nested);
+                } catch (e) {
+                    // Not JSON, ignore
+                }
+            }
+            if (typeof nested === 'object' && nested !== null) {
+                checklistId = nested.ChecklistID || nested.checklistId || nested.id;
+            }
+        }
         if (!checklistId) {
             return res.status(400).json({ 
                 status: 'error', 
                 message: 'Missing required field: checklistId. Please include checklistId in the request body.',
                 receivedFields: Object.keys(req.body || {}),
                 receivedData: req.body,
-                hint: 'Send as: {"checklistId": "YOUR_CHECKLIST_ID"}'
+                hint: 'Send as: {"checklistId": "YOUR_CHECKLIST_ID"} or checklist as JSON string/object with ChecklistID.'
             });
         }
     }
