@@ -232,14 +232,29 @@ module.exports = async (req, res) => {
             return res.status(404).json({ status: 'error', message: 'No completed checklists found' });
         }
 
-        // Find the checklist by ID
+        // Find the checklist by ID (dynamically find the ChecklistID column)
         const headers = rows[0];
         console.log(`[PDF Export] Sheet headers:`, headers);
-        
-        const checklistRow = rows.find(row => row[0] === checklistId); // Assuming ChecklistID is in first column
+        // Find the column index for ChecklistID (case-insensitive, fallback to any header containing 'id')
+        let idColIndex = headers.findIndex(h => h.trim().toLowerCase() === 'checklistid');
+        if (idColIndex === -1) {
+            idColIndex = headers.findIndex(h => h.trim().toLowerCase().includes('id'));
+        }
+        if (idColIndex === -1) {
+            console.error('[PDF Export] Could not find ChecklistID column in sheet headers:', headers);
+            return res.status(500).json({ status: 'error', message: 'Could not find ChecklistID column in sheet headers', headers });
+        }
+        console.log(`[PDF Export] Using ChecklistID column index: ${idColIndex} (header: ${headers[idColIndex]})`);
+        const allIds = rows.slice(1).map(row => row[idColIndex]);
+        console.log(`[PDF Export] All checklist IDs in sheet:`, allIds);
+        const checklistRow = rows.find((row, idx) => idx > 0 && row[idColIndex] === checklistId);
         if (!checklistRow) {
             console.error(`[PDF Export] Checklist not found: ${checklistId}`);
-            return res.status(404).json({ status: 'error', message: `Checklist ${checklistId} not found in completed records` });
+            // Log all row data for further debugging
+            rows.forEach((row, idx) => {
+                console.log(`[PDF Export] Row ${idx}:`, row);
+            });
+            return res.status(404).json({ status: 'error', message: `Checklist ${checklistId} not found in completed records`, allIds });
         }
 
         console.log(`[PDF Export] Found checklist data:`, checklistRow);
