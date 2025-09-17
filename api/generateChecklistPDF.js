@@ -112,6 +112,7 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                 drawBox(50, currentY, 495, 30, lightGray);
                 doc.fontSize(12).font('Helvetica-Bold').fillColor(primaryColor)
                    .text('Item', 60, currentY + 8)
+                   .text('Status', 300, currentY + 8)
                    .text('Result', 400, currentY + 8);
                 currentY += 35;
 
@@ -138,8 +139,9 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                     drawBox(50, currentY, 495, 30, '#ffffff');
                     // Item label
                     doc.fontSize(11).font('Helvetica').fillColor('#374151')
-                       .text(formatFieldName(key), 60, currentY + 8, { width: 320 });
-                    // Result column
+                       .text(formatFieldName(key), 60, currentY + 8, { width: 180 });
+                    // Status and Result columns
+                    let statusText = 'N/A';
                     let resultText = '';
                     let parsed = value;
                     if (typeof value === 'string' && value.trim().startsWith('{')) {
@@ -147,18 +149,26 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                             parsed = JSON.parse(value);
                         } catch (e) { /* not JSON */ }
                     }
-                    if (parsed && typeof parsed === 'object' && parsed.status) {
-                        // Support multiple codes in status (comma or space separated)
-                        const codes = parsed.status.split(/[, ]+/).filter(Boolean);
-                        resultText = codes.map(code => codeMap[code] || code).join(', ');
+                    if (parsed && typeof parsed === 'object') {
+                        // Status
+                        if (parsed.status) {
+                            const codes = parsed.status.split(/[, ]+/).filter(Boolean);
+                            statusText = codes.map(code => codeMap[code] || code).join(', ');
+                        }
+                        // Result
+                        if (parsed.result) {
+                            resultText = parsed.result;
+                        }
                     } else if (typeof value === 'string') {
+                        // If value is a code string
                         const codes = value.split(/[, ]+/).filter(Boolean);
-                        resultText = codes.map(code => codeMap[code] || code).join(', ');
-                    } else {
-                        resultText = value.toString();
+                        if (codes.length > 0 && codes.some(code => codeMap[code])) {
+                            statusText = codes.map(code => codeMap[code] || code).join(', ');
+                        }
                     }
                     doc.fontSize(11).font('Helvetica-Bold').fillColor('#1f2937')
-                       .text(resultText, 400, currentY + 8, { width: 130 });
+                       .text(statusText, 300, currentY + 8, { width: 90 })
+                       .text(resultText || 'N/A', 400, currentY + 8, { width: 130 });
                     currentY += 32;
                 });
                 
@@ -236,7 +246,11 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                 let currentY = 110;
                 let photoNum = 1;
                 
+                // Deduplicate photos by file path
+                const seen = new Set();
                 photos.forEach((photo, idx) => {
+                    if (seen.has(photo.url)) return;
+                    seen.add(photo.url);
                     try {
                         // Check if we need a new page
                         if (currentY > 500) {
