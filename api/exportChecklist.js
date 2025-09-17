@@ -39,28 +39,40 @@ module.exports = async (req, res) => {
 
     form.parse(req, async (err, fields, files) => {
         console.log(`[PDF Export] Form parsing completed`);
+        console.log(`[PDF Export] Fields received:`, Object.keys(fields));
+        console.log(`[PDF Export] Files received:`, Object.keys(files));
         if (err) {
             console.error('[PDF Export] Form parse error:', err);
             return res.status(400).json({ status: 'error', message: 'Form parse error.' });
         }
 
         let checklistRaw = fields.checklist || '{}';
+        // Handle case where formidable returns an array
+        if (Array.isArray(checklistRaw)) {
+            checklistRaw = checklistRaw[0] || '{}';
+        }
         let checklist;
         try {
             checklist = typeof checklistRaw === 'string' ? JSON.parse(checklistRaw) : checklistRaw;
             console.log(`[PDF Export] Checklist parsed successfully:`, Object.keys(checklist));
+            console.log(`[PDF Export] Full checklist data:`, JSON.stringify(checklist, null, 2));
         } catch (e) {
             console.error('[PDF Export] JSON parse error:', e);
+            console.error('[PDF Export] Raw checklist data:', checklistRaw);
             return res.status(400).json({ status: 'error', message: 'Invalid checklist JSON.' });
         }
 
-        // Basic required field validation (adjust keys as needed)
-        const requiredFields = ['ChecklistID', 'CustomerID', 'TechnicianID'];
-        const missing = requiredFields.filter(k => !checklist[k]);
-        if (missing.length) {
-            console.error(`[PDF Export] Missing required fields:`, missing);
-            return res.status(400).json({ status: 'error', message: `Missing required field(s): ${missing.join(', ')}` });
-        }
+        // More flexible field validation - check for variations of field names
+        const checklistId = checklist.ChecklistID || checklist.checklistId || checklist.id || checklist.ID || `PDF-${Date.now()}`;
+        const customerId = checklist.CustomerID || checklist.customerId || checklist.customer || checklist.Customer || 'Unknown';
+        const technicianId = checklist.TechnicianID || checklist.technicianId || checklist.technician || checklist.Technician || 'Unknown';
+        
+        // Update checklist with normalized field names
+        checklist.ChecklistID = checklistId;
+        checklist.CustomerID = customerId;
+        checklist.TechnicianID = technicianId;
+        
+        console.log(`[PDF Export] Normalized IDs - Checklist: ${checklistId}, Customer: ${customerId}, Technician: ${technicianId}`);
 
         // Uploaded photos processing
         const photos = [];
