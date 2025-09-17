@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "A preventive maintenance checklist application.",
   "scripts": {
+    "start": "node app.js",
     "build:css": "node -e \"require('fs').mkdirSync('public',{recursive:true})\" && tailwindcss -i ./src/input.css -o ./public/styles.css --minify",
-    "build": "npm run build:css"
+    "build": "npm run build:css",
+    "test:pdf": "node scripts/test-pdf.js"
   },
   "keywords": [
     "maintenance",
@@ -14,6 +16,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "multer": "^1.4.5",
     "formidable": "^3.5.1",
     "googleapis": "^134.0.0",
     "pdfkit": "^0.17.2"

@@ -44,10 +44,19 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                 doc.fontSize(18).font('Helvetica-Bold').text('Checklist Photos', { align: 'center' });
                 doc.moveDown(1);
                 photos.forEach((photo, idx) => {
-                    doc.fontSize(12).font('Helvetica-Bold').text(`Photo ${idx + 1}: ${photo.description || 'No description'}`);
-                    doc.moveDown(0.5);
-                    if (photo.url) {
-                        doc.image(photo.url, { fit: [400, 300], align: 'center' });
+                    try {
+                        doc.fontSize(12).font('Helvetica-Bold').text(`Photo ${idx + 1}: ${photo.description || 'No description'}`);
+                        doc.moveDown(0.5);
+                        if (photo.url && fs.existsSync(photo.url)) {
+                            doc.image(photo.url, { fit: [400, 300], align: 'center' });
+                            doc.moveDown(1);
+                        } else {
+                            doc.fontSize(10).font('Helvetica-Oblique').text('Image could not be loaded.', { align: 'center' });
+                            doc.moveDown(1);
+                        }
+                    } catch (imgErr) {
+                        console.error(`Error processing photo ${idx + 1}:`, imgErr);
+                        doc.fontSize(10).font('Helvetica-Oblique').text(`Error loading photo ${idx + 1}.`, { align: 'center' });
                         doc.moveDown(1);
                     }
                 });
