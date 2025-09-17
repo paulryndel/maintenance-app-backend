@@ -62,12 +62,12 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                 
                 // Equipment details in a nice grid
                 const fields = [
-                    { label: 'Customer Name', value: checklist.CustomerName || checklist.Customer || checklist.CustomerID || 'Not specified' },
-                    { label: 'Equipment Model', value: checklist.Model || checklist.EquipmentModel || 'Not specified' },
-                    { label: 'Serial Number', value: checklist.SerialNumber || checklist.Serial || 'Not specified' },
-                    { label: 'Technician', value: checklist.TechnicianName || checklist.Technician || checklist.TechnicianID || 'Not specified' },
-                    { label: 'Date', value: checklist.Date || new Date().toLocaleDateString() },
-                    { label: 'Location', value: checklist.Location || 'Not specified' }
+                    { label: 'Customer Name', value: checklist.CustomerName || checklist.Customer || checklist['Customer Name'] || checklist.CustomerID || 'Not specified' },
+                    { label: 'Equipment Model', value: checklist.Model || checklist.EquipmentModel || checklist['Equipment Model'] || 'Not specified' },
+                    { label: 'Serial Number', value: checklist.SerialNumber || checklist.Serial || checklist['Serial Number'] || 'Not specified' },
+                    { label: 'Technician', value: checklist.TechnicianName || checklist.Technician || checklist['Technician Name'] || checklist.TechnicianID || 'Not specified' },
+                    { label: 'Date', value: checklist.Date || checklist['Date'] || new Date().toLocaleDateString() },
+                    { label: 'Location', value: checklist.Location || checklist['Location'] || 'Not specified' }
                 ];
                 
                 let currentY = startY + 40;
@@ -105,65 +105,53 @@ function generateChecklistPDF(checklist, photos, outputPath) {
                 let photoRefIndex = 1;
                 let itemCount = 0;
                 
+                // Checklist result code mapping
+                const codeMap = { N: 'Normal', A: 'Adjusted', C: 'Clean', R: 'Replace', I: 'Improve' };
+
+                // Table header
+                drawBox(50, currentY, 495, 30, lightGray);
+                doc.fontSize(12).font('Helvetica-Bold').fillColor(primaryColor)
+                   .text('Item', 60, currentY + 8)
+                   .text('Result', 400, currentY + 8);
+                currentY += 35;
+
                 // Process checklist items
                 Object.entries(checklist).forEach(([key, value]) => {
                     // Skip metadata fields
-                    if (['ChecklistID', 'CustomerID', 'TechnicianID', 'CustomerName', 'Model', 'SerialNumber', 'TechnicianName', 'Date', 'Location'].includes(key)) {
+                    if ([
+                        'ChecklistID', 'CustomerID', 'TechnicianID', 'CustomerName', 'Model', 'SerialNumber',
+                        'TechnicianName', 'Date', 'Location', 'Review', 'Notes', 'Photos', 'Photo', 'Equipment Model', 'Serial Number', 'Technician', 'Customer'
+                    ].includes(key)) {
                         return;
                     }
-                    
                     // Skip empty or null values
                     if (value === null || value === undefined || value === '') {
                         return;
                     }
-                    
                     itemCount++;
-                    
                     // Check if we need a new page
                     if (currentY > 700) {
                         doc.addPage();
                         currentY = 50;
                     }
-                    
                     // Item box with fixed height
-                    drawBox(50, currentY, 495, 45, '#ffffff');
-                    
+                    drawBox(50, currentY, 495, 30, '#ffffff');
                     // Item label
-                    doc.fontSize(12).font('Helvetica-Bold').fillColor('#374151')
-                       .text(formatFieldName(key), 60, currentY + 10);
-                    
-                    // Item value/status
-                    let itemValue = value;
-                    let valueColor = '#1f2937';
-                    
-                    // Special formatting for different types of values
-                    if (typeof value === 'boolean') {
-                        itemValue = value ? '✓ PASSED' : '✗ FAILED';
-                        valueColor = value ? '#059669' : '#dc2626';
-                    } else if (value && value.toString().toLowerCase().includes('photo')) {
-                        itemValue = `${value} (See Photo ${photoRefIndex} on page ${getPhotoPageNumber()})`;
-                        valueColor = accentColor;
-                        photoRefIndex++;
+                    doc.fontSize(11).font('Helvetica').fillColor('#374151')
+                       .text(formatFieldName(key), 60, currentY + 8, { width: 320 });
+                    // Result column
+                    let resultValue = value;
+                    let resultText = '';
+                    if (typeof resultValue === 'string') {
+                        // Split by comma or space for multiple codes
+                        const codes = resultValue.split(/[, ]+/).filter(Boolean);
+                        resultText = codes.map(code => codeMap[code] || code).join(', ');
+                    } else {
+                        resultText = resultValue.toString();
                     }
-                    
-                    doc.fontSize(11).font('Helvetica').fillColor(valueColor)
-                       .text(itemValue.toString() || 'Not checked', 60, currentY + 28, { width: 420 });
-                    
-                    // Add checkbox or status indicator
-                    if (typeof value === 'boolean') {
-                        const checkboxX = 500;
-                        const checkboxY = currentY + 15;
-                        drawBox(checkboxX, checkboxY, 15, 15, value ? '#059669' : '#dc2626');
-                        if (value) {
-                            doc.fontSize(12).font('Helvetica-Bold').fillColor('white')
-                               .text('✓', checkboxX + 3, checkboxY + 1);
-                        } else {
-                            doc.fontSize(12).font('Helvetica-Bold').fillColor('white')
-                               .text('✗', checkboxX + 3, checkboxY + 1);
-                        }
-                    }
-                    
-                    currentY += 50;
+                    doc.fontSize(11).font('Helvetica-Bold').fillColor('#1f2937')
+                       .text(resultText, 400, currentY + 8, { width: 130 });
+                    currentY += 32;
                 });
                 
                 // If no checklist items were found, show a message

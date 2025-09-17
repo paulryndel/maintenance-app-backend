@@ -283,9 +283,44 @@ module.exports = async (req, res) => {
 
         console.log(`[PDF Export] Enhanced checklist data:`, JSON.stringify(enhancedChecklist, null, 2));
 
-        // For now, no photos since they're not stored in sheets
-        // TODO: Implement photo retrieval if photos are stored separately
+
+        // Find and download photos referenced in checklist fields
         const photos = [];
+        const fetch = require('node-fetch');
+
+        for (const [key, value] of Object.entries(enhancedChecklist)) {
+            if (typeof value === 'string' && value.includes('/api/getImage?fileId=')) {
+                // Support multiple photos in a single field (JSON array or comma-separated)
+                let photoUrls = [];
+                try {
+                    if (value.trim().startsWith('[')) {
+                        photoUrls = JSON.parse(value);
+                    } else {
+                        photoUrls = value.split(',').map(v => v.trim());
+                    }
+                } catch (e) {
+                    photoUrls = [value];
+                }
+                for (const url of photoUrls) {
+                    try {
+                        const fileIdMatch = url.match(/fileId=([^&]+)/);
+                        const fileId = fileIdMatch ? fileIdMatch[1] : Date.now();
+                        const imgPath = path.join(os.tmpdir(), `photo_${fileId}_${Date.now()}.jpg`);
+                        const resImg = await fetch(url.startsWith('http') ? url : `https://${req.headers.host}${url}`);
+                        if (!resImg.ok) throw new Error('Failed to fetch image');
+                        const dest = fs.createWriteStream(imgPath);
+                        await new Promise((resolve, reject) => {
+                            resImg.body.pipe(dest);
+                            resImg.body.on('error', reject);
+                            dest.on('finish', resolve);
+                        });
+                        photos.push({ url: imgPath, description: key });
+                    } catch (err) {
+                        console.error(`[PDF Export] Failed to download photo for ${key}:`, err);
+                    }
+                }
+            }
+        }
 
         // Generate PDF
         const pdfPath = path.join(os.tmpdir(), `Checklist_${checklistId}_${Date.now()}.pdf`);
