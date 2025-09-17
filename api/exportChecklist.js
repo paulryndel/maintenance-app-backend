@@ -10,6 +10,25 @@ function safeUnlink(filePath) {
     fs.promises.unlink(filePath).catch(() => {/* ignore */});
 }
 
+// Utility: parse request body if not already parsed
+async function parseBody(req) {
+    if (req.body !== undefined) return req.body;
+    
+    return new Promise((resolve) => {
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            try {
+                resolve(body ? JSON.parse(body) : {});
+            } catch (e) {
+                resolve({});
+            }
+        });
+    });
+}
+
 // Enable JSON body parsing for this endpoint
 module.exports.config = {
     api: {
@@ -68,10 +87,19 @@ module.exports = async (req, res) => {
             return res.status(400).json({ status: 'error', message: 'Missing required parameter: checklistId' });
         }
     } else if (req.method === 'POST') {
+        // Parse body if not already parsed by Vercel
+        req.body = await parseBody(req);
+        
         // Handle POST request - try to extract checklistId from multiple possible sources
         console.log('[PDF Export] POST body type:', typeof req.body);
         console.log('[PDF Export] POST body received:', JSON.stringify(req.body, null, 2));
         console.log('[PDF Export] POST body keys:', Object.keys(req.body || {}));
+        
+        // Ensure req.body exists, if not initialize as empty object
+        if (!req.body) {
+            req.body = {};
+            console.log('[PDF Export] POST body was undefined, initialized as empty object');
+        }
         
         checklistId = req.body?.checklistId || 
                      req.body?.ChecklistID || 
@@ -94,7 +122,7 @@ module.exports = async (req, res) => {
         }
         
         // If still no ID, try to find any field that looks like an ID
-        if (!checklistId) {
+        if (!checklistId && req.body && typeof req.body === 'object') {
             const possibleIds = Object.entries(req.body).find(([key, value]) => 
                 key.toLowerCase().includes('id') && value && typeof value === 'string'
             );
